@@ -49,7 +49,7 @@ class FileSystemHelper implements FileSystemHelperInterface
         }
 
         if ($this->isSplEntityExists($toSplEntity)) {
-            $message = sprintf("Target entity '%s' to copying already exists.", $toSplEntity->getPath());
+            $message = sprintf("Target entity '%s' to copy already exists.", $toSplEntity->getPath());
             throw new FileSystemException($message);
         }
 
@@ -75,25 +75,50 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
+    public function rename($from, $to): void
+    {
+        $fromSplEntity = $this->createSplFileInfo($from);
+        $toSplEntity = $this->createSplFileInfo($to);
+
+        if (!$this->isSplEntityExists($fromSplEntity)) {
+            $message = sprintf("Can not find source entity '%s' to rename.", $fromSplEntity->getPathName());
+            throw new FileSystemException($message);
+        }
+
+        if ($this->isSplEntityExists($toSplEntity)) {
+            $message = sprintf("Target entity '%s' to rename already exists.", $toSplEntity->getPathName());
+            throw new FileSystemException($message);
+        }
+
+        $this->safeRunPhpFunction(
+            'rename',
+            [
+                $fromSplEntity->getRealPath(),
+                $toSplEntity->getPathName(),
+            ]
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function mkdir($path, int $mode = 0777): SplFileInfo
     {
         $splEntity = $this->createSplFileInfo($path);
 
         if ($this->isSplEntityExists($splEntity)) {
-            $message = sprintf("Directory '%s' already exists.", $splEntity->getPath());
+            $message = sprintf("Directory '%s' already exists.", $splEntity->getPathName());
             throw new FileSystemException($message);
         }
 
-        try {
-            $mkdirRes = mkdir($splEntity->getPathname(), $mode, true);
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
-
-        if (!$mkdirRes) {
-            $message = sprintf("Error while creating dir '%s'.", $splEntity->getPath());
-            throw new FileSystemException($message);
-        }
+        $this->safeRunPhpFunction(
+            'mkdir',
+            [
+                $splEntity->getPathname(),
+                $mode,
+                true,
+            ]
+        );
 
         return $splEntity;
     }
@@ -136,16 +161,12 @@ class FileSystemHelper implements FileSystemHelperInterface
      */
     private function removeFile(SplFileInfo $file): void
     {
-        try {
-            $unlinkRes = unlink($file->getRealPath());
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
-
-        if (!$unlinkRes) {
-            $message = sprintf("Can not unlink file '%s'.", $file->getPath());
-            throw new FileSystemException($message);
-        }
+        $this->safeRunPhpFunction(
+            'unlink',
+            [
+                $file->getRealPath(),
+            ]
+        );
     }
 
     /**
@@ -157,7 +178,7 @@ class FileSystemHelper implements FileSystemHelperInterface
      */
     private function removeDir(SplFileInfo $dir): void
     {
-        $this->iterateDIrectory(
+        $this->iterateDirectory(
             $dir,
             function (SplFileInfo $file): void {
                 if ($file->isDir()) {
@@ -168,16 +189,12 @@ class FileSystemHelper implements FileSystemHelperInterface
             }
         );
 
-        try {
-            $rmRes = rmdir($dir->getRealPath());
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
-
-        if (!$rmRes) {
-            $message = sprintf("Can not remove directory '%s'.", $dir->getPath());
-            throw new FileSystemException($message);
-        }
+        $this->safeRunPhpFunction(
+            'rmdir',
+            [
+                $dir->getRealPath(),
+            ]
+        );
     }
 
     /**
@@ -190,20 +207,13 @@ class FileSystemHelper implements FileSystemHelperInterface
      */
     private function copyFile(SplFileInfo $from, SplFileInfo $to): void
     {
-        try {
-            $copyRes = copy($from->getRealPath(), $to->getPathname());
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
-
-        if (!$copyRes) {
-            $message = sprintf(
-                "Error while copying '%s' to '%s'.",
-                $from->getPathname(),
-                $to->getPathname()
-            );
-            throw new FileSystemException($message);
-        }
+        $this->safeRunPhpFunction(
+            'copy',
+            [
+                $from->getRealPath(),
+                $to->getPathname(),
+            ]
+        );
     }
 
     /**
@@ -218,7 +228,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     {
         $this->mkdir($to);
 
-        $this->iterateDIrectory(
+        $this->iterateDirectory(
             $from,
             function (SplFileInfo $file) use ($to): void {
                 $destination = new SplFileInfo($to->getPathname() . '/' . $file->getBasename());
@@ -229,29 +239,6 @@ class FileSystemHelper implements FileSystemHelperInterface
                 }
             }
         );
-    }
-
-    /**
-     * Creates iterator for set directory.
-     *
-     * @param SplFileInfo $dir
-     */
-    private function iterateDIrectory(SplFileInfo $dir, Closure $callback): void
-    {
-        $it = new RecursiveDirectoryIterator(
-            $dir->getRealPath(),
-            RecursiveDirectoryIterator::SKIP_DOTS
-        );
-
-        $content = new RecursiveIteratorIterator(
-            $it,
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        /** @var SplFileInfo $file */
-        foreach ($content as $file) {
-            call_user_func_array($callback, [$file]);
-        }
     }
 
     /**
@@ -295,5 +282,50 @@ class FileSystemHelper implements FileSystemHelperInterface
         $realPath = $entity->getRealPath();
 
         return !empty($realPath) && file_exists($realPath);
+    }
+
+    /**
+     * Creates iterator for set directory.
+     *
+     * @param SplFileInfo $dir
+     */
+    private function iterateDirectory(SplFileInfo $dir, Closure $callback): void
+    {
+        $it = new RecursiveDirectoryIterator(
+            $dir->getRealPath(),
+            RecursiveDirectoryIterator::SKIP_DOTS
+        );
+
+        $content = new RecursiveIteratorIterator(
+            $it,
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        /** @var SplFileInfo $file */
+        foreach ($content as $file) {
+            call_user_func_array($callback, [$file]);
+        }
+    }
+
+    /**
+     * Runs set php function in try/catch.
+     *
+     * @param string $functionName
+     * @param array  $params
+     *
+     * @throws FileSystemException
+     */
+    private function safeRunPhpFunction(string $functionName, array $params = []): void
+    {
+        try {
+            $res = (bool) call_user_func_array($functionName, $params);
+        } catch (Throwable $e) {
+            throw new FileSystemException($e->getMessage(), 0, $e);
+        }
+
+        if (!$res) {
+            $message = sprintf("Error while running '%s',", $functionName);
+            throw new FileSystemException($message);
+        }
     }
 }

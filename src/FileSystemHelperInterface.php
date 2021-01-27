@@ -31,6 +31,16 @@ interface FileSystemHelperInterface
     public function copy($from, $to): void;
 
     /**
+     * Renames file system entity.
+     *
+     * @param SplFileInfo|string $from
+     * @param SplFileInfo|string $to
+     *
+     * @throws FileSystemException
+     */
+    public function rename($from, $to): void;
+
+    /**
      * Creates new folder by path.
      *
      * @param SplFileInfo|string $path

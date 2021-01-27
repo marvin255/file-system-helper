@@ -180,6 +180,75 @@ class FileSystemHelperTest extends BaseCase
     /**
      * @throws Throwable
      */
+    public function testRenameFile(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $from = $this->getPathToTestFile($dir . '/test.txt');
+        $to = $dir . '/test_rename.txt';
+
+        $helper = new FileSystemHelper();
+        $helper->rename($from, $to);
+
+        $this->assertFileExists($to);
+        $this->assertFileDoesnotExist($from);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRenameDir(): void
+    {
+        $from = $this->getPathToTestDir();
+        $nestedFile = $this->getPathToTestFile($from . '/nested.txt');
+        $nestedDir = $this->getPathToTestDir($from . '/nested');
+        $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
+
+        $to = $this->getTempDir() . '/destination';
+        $destinationNestedFile = $to . '/nested.txt';
+        $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
+
+        $helper = new FileSystemHelper();
+        $helper->rename($from, $to);
+
+        $this->assertDirectoryExists($to);
+        $this->assertDirectoryDoesNotExist($from);
+        $this->assertFileExists($destinationNestedFile);
+        $this->assertFileDoesnotExist($nestedFile);
+        $this->assertFileExists($destinationNestedFileSecondLevel);
+        $this->assertFileDoesnotExist($nestedFileSecondLevel);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRenameUnexistedSourceException(): void
+    {
+        $from = $this->getTempDir() . '/non_existed_file';
+        $to = $this->getTempDir() . '/destination';
+
+        $helper = new FileSystemHelper();
+
+        $this->expectException(FileSystemException::class);
+        $helper->rename($from, $to);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRenameExistedDestinationException(): void
+    {
+        $from = $this->getPathToTestDir();
+        $to = $this->getPathToTestDir();
+
+        $helper = new FileSystemHelper();
+
+        $this->expectException(FileSystemException::class);
+        $helper->rename($from, $to);
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testMkdir(): void
     {
         $dir = $this->getPathToTestDir();
