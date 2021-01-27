@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Marvin255\FileHelper\Tests;
+namespace Marvin255\FileSystemHelper\Tests;
 
 use PHPUnit\Framework\TestCase;
 

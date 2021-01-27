@@ -1,4 +1,4 @@
-name: file_helper
+name: file_system_helper
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    name: File helper (PHP ${{ matrix.php-versions }})
+    name: File system helper (PHP ${{ matrix.php-versions }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true

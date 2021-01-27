@@ -6,7 +6,7 @@
     </include>
   </coverage>
   <testsuites>
-    <testsuite name="File helper tests suite">
+    <testsuite name="File system helper tests suite">
       <directory>./tests</directory>
     </testsuite>
   </testsuites>

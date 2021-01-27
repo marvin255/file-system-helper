@@ -4,8 +4,8 @@ version: '3.7'
 # container to run tests and other developer activities
 services:
   php:
-    container_name: file-helper-php
-    image: file-helper-php
+    container_name: file-system-helper-php
+    image: file-system-helper-php
     build:
       context: php
     volumes:

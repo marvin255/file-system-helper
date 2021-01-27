@@ -15,12 +15,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Marvin255\\FileHelper\\": "src/"
+      "Marvin255\\FileSystemHelper\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Marvin255\\FileHelper\\Tests\\": "tests/"
+      "Marvin255\\FileSystemHelper\\Tests\\": "tests/"
     }
   },
   "scripts": {
