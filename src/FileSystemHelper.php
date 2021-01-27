@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
+use Closure;
+use Iterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -51,77 +53,22 @@ class FileSystemHelper implements FileSystemHelperInterface
             throw new FileSystemException($message);
         }
 
-        $parent = $this->createSplFileInfo(dirname($toSplEntity->getPath()));
+        $parent = $this->createSplFileInfo($toSplEntity->getPath());
 
         if (!$this->isSplEntityExists($parent)) {
-            $message = sprintf("Target path '%s' for copying does not exist.", $parent->getPath());
+            $message = sprintf("Target path '%s' for copying does not exist.", $parent->getPathName());
             throw new FileSystemException($message);
         }
 
         if (!$parent->isWritable()) {
-            $message = sprintf("Target path '%s' for copying is not writable.", $parent->getPath());
+            $message = sprintf("Target path '%s' for copying is not writable.", $parent->getPathName());
             throw new FileSystemException($message);
         }
 
-        try {
-            $copyRes = copy($fromSplEntity->getRealPath(), $toSplEntity->getRealPath());
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
-
-        if (!$copyRes) {
-            $message = sprintf(
-                "Error while copying '%s' to '%s'.",
-                $fromSplEntity->getPath(),
-                $toSplEntity->getPath()
-            );
-            throw new FileSystemException($message);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function move($from, $to): void
-    {
-        $fromSplEntity = $this->createSplFileInfo($from);
-        $toSplEntity = $this->createSplFileInfo($to);
-
-        if (!$this->isSplEntityExists($fromSplEntity)) {
-            $message = sprintf("Can not find source entity '%s' to move.", $fromSplEntity->getPath());
-            throw new FileSystemException($message);
-        }
-
-        if ($this->isSplEntityExists($toSplEntity)) {
-            $message = sprintf("Target entity '%s' to moving already exists.", $toSplEntity->getPath());
-            throw new FileSystemException($message);
-        }
-
-        $parent = $this->createSplFileInfo(dirname($toSplEntity->getPath()));
-
-        if (!$this->isSplEntityExists($parent)) {
-            $message = sprintf("Target path '%s' for moving does not exist.", $parent->getPath());
-            throw new FileSystemException($message);
-        }
-
-        if (!$parent->isWritable()) {
-            $message = sprintf("Target path '%s' for moving is not writable.", $parent->getPath());
-            throw new FileSystemException($message);
-        }
-
-        try {
-            $renameRes = rename($fromSplEntity->getRealPath(), $toSplEntity->getRealPath());
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
-
-        if (!$renameRes) {
-            $message = sprintf(
-                "Error while moving '%s' to '%s'.",
-                $fromSplEntity->getPath(),
-                $toSplEntity->getPath()
-            );
-            throw new FileSystemException($message);
+        if ($fromSplEntity->isFile()) {
+            $this->copyFile($fromSplEntity, $toSplEntity);
+        } elseif ($fromSplEntity->isDir()) {
+            $this->copyDir($fromSplEntity, $toSplEntity);
         }
     }
 
@@ -138,7 +85,7 @@ class FileSystemHelper implements FileSystemHelperInterface
         }
 
         try {
-            $mkdirRes = mkdir($splEntity->getPath(), $mode, true);
+            $mkdirRes = mkdir($splEntity->getPathname(), $mode, true);
         } catch (Throwable $e) {
             throw new FileSystemException($e->getMessage(), 0, $e);
         }
@@ -210,24 +157,16 @@ class FileSystemHelper implements FileSystemHelperInterface
      */
     private function removeDir(SplFileInfo $dir): void
     {
-        $it = new RecursiveDirectoryIterator(
-            $dir->getRealPath(),
-            RecursiveDirectoryIterator::SKIP_DOTS
-        );
-
-        $files = new RecursiveIteratorIterator(
-            $it,
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        /** @var SplFileInfo $file */
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                $this->removeDir($file);
-            } elseif ($file->isFile()) {
-                $this->removeFile($file);
+        $this->iterateDIrectory(
+            $dir,
+            function (SplFileInfo $file): void {
+                if ($file->isDir()) {
+                    $this->removeDir($file);
+                } elseif ($file->isFile()) {
+                    $this->removeFile($file);
+                }
             }
-        }
+        );
 
         try {
             $rmRes = rmdir($dir->getRealPath());
@@ -238,6 +177,80 @@ class FileSystemHelper implements FileSystemHelperInterface
         if (!$rmRes) {
             $message = sprintf("Can not remove directory '%s'.", $dir->getPath());
             throw new FileSystemException($message);
+        }
+    }
+
+    /**
+     * Copies file.
+     *
+     * @param SplFileInfo $from
+     * @param SplFileInfo $to
+     *
+     * @throws FileSystemException
+     */
+    private function copyFile(SplFileInfo $from, SplFileInfo $to): void
+    {
+        try {
+            $copyRes = copy($from->getRealPath(), $to->getPathname());
+        } catch (Throwable $e) {
+            throw new FileSystemException($e->getMessage(), 0, $e);
+        }
+
+        if (!$copyRes) {
+            $message = sprintf(
+                "Error while copying '%s' to '%s'.",
+                $from->getPathname(),
+                $to->getPathname()
+            );
+            throw new FileSystemException($message);
+        }
+    }
+
+    /**
+     * Copies directory.
+     *
+     * @param SplFileInfo $from
+     * @param SplFileInfo $to
+     *
+     * @throws FileSystemException
+     */
+    private function copyDir(SplFileInfo $from, SplFileInfo $to): void
+    {
+        $this->mkdir($to);
+
+        $this->iterateDIrectory(
+            $from,
+            function (SplFileInfo $file) use ($to): void {
+                $destination = new SplFileInfo($to->getPathname() . '/' . $file->getBasename());
+                if ($file->isDir()) {
+                    $this->copyDir($file, $destination);
+                } elseif ($file->isFile()) {
+                    $this->copyFile($file, $destination);
+                }
+            }
+        );
+    }
+
+    /**
+     * Creates iterator for set directory.
+     *
+     * @param SplFileInfo $dir
+     */
+    private function iterateDIrectory(SplFileInfo $dir, Closure $callback): void
+    {
+        $it = new RecursiveDirectoryIterator(
+            $dir->getRealPath(),
+            RecursiveDirectoryIterator::SKIP_DOTS
+        );
+
+        $content = new RecursiveIteratorIterator(
+            $it,
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        /** @var SplFileInfo $file */
+        foreach ($content as $file) {
+            call_user_func_array($callback, [$file]);
         }
     }
 

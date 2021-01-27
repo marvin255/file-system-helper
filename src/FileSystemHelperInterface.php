@@ -31,16 +31,6 @@ interface FileSystemHelperInterface
     public function copy($from, $to): void;
 
     /**
-     * Moves set file or folder.
-     *
-     * @param SplFileInfo|string $from
-     * @param SplFileInfo|string $to
-     *
-     * @throws FileSystemException
-     */
-    public function move($from, $to): void;
-
-    /**
      * Creates new folder by path.
      *
      * @param SplFileInfo|string $path
