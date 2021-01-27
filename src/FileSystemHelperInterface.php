@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
+use Closure;
 use SplFileInfo;
 
 /**
@@ -72,4 +73,12 @@ interface FileSystemHelperInterface
      * @throws FileSystemException
      */
     public function getTmpDir(): SplFileInfo;
+
+    /**
+     * Iterates over directory children using callback.
+     *
+     * @param SplFileInfo $dir
+     * @param Closure     $callback
+     */
+    public function iterateDirectory(SplFileInfo $dir, Closure $callback): void;
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marvin255\FileSystemHelper;
 
 use Closure;
-use Iterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -153,6 +152,27 @@ class FileSystemHelper implements FileSystemHelperInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function iterateDirectory(SplFileInfo $dir, Closure $callback): void
+    {
+        $it = new RecursiveDirectoryIterator(
+            $dir->getRealPath(),
+            RecursiveDirectoryIterator::SKIP_DOTS
+        );
+
+        $content = new RecursiveIteratorIterator(
+            $it,
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        /** @var SplFileInfo $file */
+        foreach ($content as $file) {
+            call_user_func_array($callback, [$file]);
+        }
+    }
+
+    /**
      * Unlinks single file.
      *
      * @param SplFileInfo $file
@@ -282,29 +302,6 @@ class FileSystemHelper implements FileSystemHelperInterface
         $realPath = $entity->getRealPath();
 
         return !empty($realPath) && file_exists($realPath);
-    }
-
-    /**
-     * Creates iterator for set directory.
-     *
-     * @param SplFileInfo $dir
-     */
-    private function iterateDirectory(SplFileInfo $dir, Closure $callback): void
-    {
-        $it = new RecursiveDirectoryIterator(
-            $dir->getRealPath(),
-            RecursiveDirectoryIterator::SKIP_DOTS
-        );
-
-        $content = new RecursiveIteratorIterator(
-            $it,
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        /** @var SplFileInfo $file */
-        foreach ($content as $file) {
-            call_user_func_array($callback, [$file]);
-        }
     }
 
     /**
