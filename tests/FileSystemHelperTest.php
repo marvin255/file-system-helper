@@ -119,7 +119,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getPathToTestDir();
         $nestedFile = $this->getPathToTestFile($from . '/nested.txt');
         $nestedDir = $this->getPathToTestDir($from . '/nested');
-        $nestedFileSecondLevel = $this->getPathToTestDir($nestedDir . '/nested_second.txt');
+        $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
 
         $to = $this->getTempDir() . '/destination';
         $destinationNestedFile = $to . '/nested.txt';
