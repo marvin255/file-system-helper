@@ -1,5 +1,5 @@
 {
-  "name": "marvin255/file-helper",
+  "name": "marvin255/file-system-helper",
   "type": "library",
   "description": "Simple helper for file system.",
   "keywords": ["php", "file system"],
@@ -32,7 +32,7 @@
   "repositories": [
     {
       "type": "git",
-      "url": "https://github.com/marvin255/config-bag"
+      "url": "https://github.com/marvin255/file-system-helper"
     }
   ]
 }
