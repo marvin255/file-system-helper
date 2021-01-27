@@ -77,8 +77,8 @@ interface FileSystemHelperInterface
     /**
      * Iterates over directory children using callback.
      *
-     * @param SplFileInfo $dir
-     * @param Closure     $callback
+     * @param SplFileInfo|string $dir
+     * @param Closure            $callback
      */
-    public function iterateDirectory(SplFileInfo $dir, Closure $callback): void;
+    public function iterateDirectory($dir, Closure $callback): void;
 }

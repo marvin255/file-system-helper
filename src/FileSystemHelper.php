@@ -154,10 +154,12 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function iterateDirectory(SplFileInfo $dir, Closure $callback): void
+    public function iterateDirectory($dir, Closure $callback): void
     {
+        $splEntity = $this->createSplFileInfo($dir);
+
         $it = new RecursiveDirectoryIterator(
-            $dir->getRealPath(),
+            $splEntity->getRealPath(),
             RecursiveDirectoryIterator::SKIP_DOTS
         );
 
