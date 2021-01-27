@@ -257,7 +257,7 @@ class FileSystemHelper implements FileSystemHelperInterface
         }
 
         if (is_string($data)) {
-            $trimmedData = rtrim(trim($data), '/');
+            $trimmedData = rtrim(trim($data), '/\\');
             if ($trimmedData === '') {
                 $message = 'Can not create SplFileInfo from empty string.';
                 throw new FileSystemException($message);
