@@ -66,6 +66,15 @@ interface FileSystemHelperInterface
     public function mkdirIfNotExist($path, int $mode = 0777): SplFileInfo;
 
     /**
+     * Removes all content form directory but keep itself.
+     *
+     * @param SplFileInfo|string $path
+     *
+     * @throws FileSystemException
+     */
+    public function emptyDir($path): void;
+
+    /**
      * Returns SplFileInfo with info for tmp folder.
      *
      * @return SplFileInfo
