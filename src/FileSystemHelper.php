@@ -139,6 +139,26 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
+    public function emptyDir($path): void
+    {
+        $splEntity = $this->createSplFileInfo($path);
+
+        if (!$splEntity->isDir()) {
+            $message = sprintf("Path '%s' must be an existed dir to be emptied.", $splEntity->getPathName());
+            throw new FileSystemException($message);
+        }
+
+        $this->iterateDirectory(
+            $splEntity,
+            function (SplFileInfo $entity) {
+                $this->remove($entity);
+            }
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getTmpDir(): SplFileInfo
     {
         $tmpDir = sys_get_temp_dir();

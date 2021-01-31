@@ -303,6 +303,38 @@ class FileSystemHelperTest extends BaseCase
     /**
      * @throws Throwable
      */
+    public function testEmptyDir(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $nestedFile = $this->getPathToTestFile($dir . '/nested.txt');
+        $nestedDir = $this->getPathToTestDir($dir . '/nested');
+        $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
+
+        $helper = new FileSystemHelper();
+        $helper->emptyDir($dir);
+
+        $this->assertDirectoryExists($dir);
+        $this->assertDirectoryDoesNotExist($nestedDir);
+        $this->assertFileDoesnotExist($nestedFile);
+        $this->assertFileDoesnotExist($nestedFileSecondLevel);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testEmptyDirUnexistedException(): void
+    {
+        $dir = '/unexisted/dir';
+
+        $helper = new FileSystemHelper();
+
+        $this->expectException(FileSystemException::class);
+        $helper->emptyDir($dir);
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testGetTmpDir(): void
     {
         $helper = new FileSystemHelper();
