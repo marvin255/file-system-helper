@@ -14,7 +14,10 @@ use RuntimeException;
  */
 abstract class BaseCase extends TestCase
 {
-    private ?string $tempDir = null;
+    /**
+     * @var string|null
+     */
+    private $tempDir = null;
 
     /**
      * Returns path to temporary folder.
