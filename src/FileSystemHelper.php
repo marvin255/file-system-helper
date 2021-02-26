@@ -37,6 +37,20 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
+    public function removeIfExists($entity): void
+    {
+        $splEntity = $this->createSplFileInfo($entity);
+
+        if ($splEntity->isFile()) {
+            $this->removeFile($splEntity);
+        } elseif ($splEntity->isDir()) {
+            $this->removeDir($splEntity);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function copy($from, $to): void
     {
         $fromSplEntity = $this->createSplFileInfo($from);

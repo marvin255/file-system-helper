@@ -98,6 +98,65 @@ class FileSystemHelperTest extends BaseCase
     /**
      * @throws Throwable
      */
+    public function testRemoveIfExistsFile(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelper();
+        $helper->removeIfExists($file);
+
+        $this->assertFileDoesNotExist($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveIfExistsFileSplObject(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelper();
+        $helper->removeIfExists(new SplFileInfo($file));
+
+        $this->assertFileDoesNotExist($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveIfExistsDir(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $nestedFile = $this->getPathToTestFile($dir . '/nested.txt');
+        $nestedDir = $this->getPathToTestDir($dir . '/nested');
+        $nestedFileSecondLevel = $this->getPathToTestDir($nestedDir . '/nested_second.txt');
+
+        $helper = new FileSystemHelper();
+        $helper->removeIfExists($dir);
+
+        $this->assertFileDoesNotExist($nestedFile);
+        $this->assertFileDoesNotExist($nestedFileSecondLevel);
+        $this->assertDirectoryDoesNotExist($nestedDir);
+        $this->assertDirectoryDoesNotExist($dir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveIfExustsUnexistedException(): void
+    {
+        $file = '/test_file_not_exist.txt';
+
+        $helper = new FileSystemHelper();
+
+        $helper->removeIfExists($file);
+
+        $this->assertFileDoesNotExist($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testCopyFile(): void
     {
         $dir = $this->getPathToTestDir();

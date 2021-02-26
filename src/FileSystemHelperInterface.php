@@ -22,6 +22,15 @@ interface FileSystemHelperInterface
     public function remove($entity): void;
 
     /**
+     * Removes set entity on if it exists.
+     *
+     * @param SplFileInfo|string $entity
+     *
+     * @throws FileSystemException
+     */
+    public function removeIfExists($entity): void;
+
+    /**
      * Copies set file or folder.
      *
      * @param SplFileInfo|string $from
