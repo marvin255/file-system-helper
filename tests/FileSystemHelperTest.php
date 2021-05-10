@@ -9,6 +9,9 @@ use Marvin255\FileSystemHelper\FileSystemHelper;
 use SplFileInfo;
 use Throwable;
 
+/**
+ * @internal
+ */
 class FileSystemHelperTest extends BaseCase
 {
     /**
