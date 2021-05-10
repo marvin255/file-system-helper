@@ -35,7 +35,7 @@ abstract class BaseCase extends TestCase
                     "Can't find or write temporary folder: {$this->tempDir}"
                 );
             }
-            $this->tempDir .= DIRECTORY_SEPARATOR . 'fias_component';
+            $this->tempDir .= \DIRECTORY_SEPARATOR . 'fias_component';
             $this->removeDir($this->tempDir);
             if (!mkdir($this->tempDir, 0777, true)) {
                 throw new RuntimeException(
@@ -65,7 +65,7 @@ abstract class BaseCase extends TestCase
         if (strpos($name, $this->getTempDir()) === 0) {
             $pathToFolder = $name;
         } else {
-            $pathToFolder = $this->getTempDir() . DIRECTORY_SEPARATOR . $name;
+            $pathToFolder = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
         }
 
         if (!mkdir($pathToFolder, 0777, true)) {
@@ -92,7 +92,7 @@ abstract class BaseCase extends TestCase
         if (strpos($name, $this->getTempDir()) === 0) {
             $pathToFile = $name;
         } else {
-            $pathToFile = $this->getTempDir() . DIRECTORY_SEPARATOR . $name;
+            $pathToFile = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
         }
 
         $content = $content === null ? md5(random_bytes(10)) : $content;
@@ -108,7 +108,7 @@ abstract class BaseCase extends TestCase
      *
      * @param string $folderPath
      */
-    protected function removeDir(string $folderPath)
+    protected function removeDir(string $folderPath): void
     {
         if (is_dir($folderPath)) {
             $it = new RecursiveDirectoryIterator(

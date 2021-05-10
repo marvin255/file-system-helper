@@ -164,7 +164,7 @@ class FileSystemHelper implements FileSystemHelperInterface
 
         $this->iterateDirectory(
             $splEntity,
-            function (SplFileInfo $entity) {
+            function (SplFileInfo $entity): void {
                 $this->remove($entity);
             }
         );
@@ -204,7 +204,7 @@ class FileSystemHelper implements FileSystemHelperInterface
 
         /** @var SplFileInfo $file */
         foreach ($content as $file) {
-            call_user_func_array($callback, [$file]);
+            \call_user_func_array($callback, [$file]);
         }
     }
 
@@ -312,7 +312,7 @@ class FileSystemHelper implements FileSystemHelperInterface
             return $data;
         }
 
-        if (is_string($data)) {
+        if (\is_string($data)) {
             $trimmedData = rtrim(trim($data), '/\\');
             if ($trimmedData === '') {
                 $message = 'Can not create SplFileInfo from empty string.';
@@ -351,7 +351,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     private function safeRunPhpFunction(string $functionName, array $params = []): void
     {
         try {
-            $res = (bool) call_user_func_array($functionName, $params);
+            $res = (bool) \call_user_func_array($functionName, $params);
         } catch (Throwable $e) {
             throw new FileSystemException($e->getMessage(), 0, $e);
         }

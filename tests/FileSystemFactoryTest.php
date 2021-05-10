@@ -8,6 +8,9 @@ use Marvin255\FileSystemHelper\FileSystemFactory;
 use Marvin255\FileSystemHelper\FileSystemHelperInterface;
 use Throwable;
 
+/**
+ * @internal
+ */
 class FileSystemFactoryTest extends BaseCase
 {
     /**
