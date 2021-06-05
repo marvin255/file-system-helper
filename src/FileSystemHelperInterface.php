@@ -19,7 +19,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function remove($entity): void;
+    public function remove(SplFileInfo | string $entity): void;
 
     /**
      * Removes set entity on if it exists.
@@ -28,7 +28,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function removeIfExists($entity): void;
+    public function removeIfExists(SplFileInfo | string $entity): void;
 
     /**
      * Copies set file or folder.
@@ -38,7 +38,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function copy($from, $to): void;
+    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): void;
 
     /**
      * Renames file system entity.
@@ -48,7 +48,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function rename($from, $to): void;
+    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): void;
 
     /**
      * Creates new folder by path.
@@ -60,7 +60,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function mkdir($path, int $mode = 0777): SplFileInfo;
+    public function mkdir(SplFileInfo | string $path, int $mode = 0777): SplFileInfo;
 
     /**
      * Creates new folder by path if it does not exist.
@@ -72,7 +72,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function mkdirIfNotExist($path, int $mode = 0777): SplFileInfo;
+    public function mkdirIfNotExist(SplFileInfo | string $path, int $mode = 0777): SplFileInfo;
 
     /**
      * Removes all content form directory but keep itself.
@@ -81,7 +81,7 @@ interface FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    public function emptyDir($path): void;
+    public function emptyDir(SplFileInfo | string $path): void;
 
     /**
      * Returns SplFileInfo with info for tmp folder.
@@ -98,5 +98,5 @@ interface FileSystemHelperInterface
      * @param SplFileInfo|string $dir
      * @param Closure            $callback
      */
-    public function iterateDirectory($dir, Closure $callback): void;
+    public function iterateDirectory(SplFileInfo | string $dir, Closure $callback): void;
 }

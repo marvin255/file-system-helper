@@ -18,7 +18,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function remove($entity): void
+    public function remove(SplFileInfo | string $entity): void
     {
         $splEntity = $this->createSplFileInfo($entity);
 
@@ -37,7 +37,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function removeIfExists($entity): void
+    public function removeIfExists(SplFileInfo | string $entity): void
     {
         $splEntity = $this->createSplFileInfo($entity);
 
@@ -51,7 +51,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function copy($from, $to): void
+    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): void
     {
         $fromSplEntity = $this->createSplFileInfo($from);
         $toSplEntity = $this->createSplFileInfo($to);
@@ -88,7 +88,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function rename($from, $to): void
+    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): void
     {
         $fromSplEntity = $this->createSplFileInfo($from);
         $toSplEntity = $this->createSplFileInfo($to);
@@ -115,7 +115,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function mkdir($path, int $mode = 0777): SplFileInfo
+    public function mkdir(SplFileInfo | string $path, int $mode = 0777): SplFileInfo
     {
         $splEntity = $this->createSplFileInfo($path);
 
@@ -139,7 +139,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function mkdirIfNotExist($path, int $mode = 0777): SplFileInfo
+    public function mkdirIfNotExist(SplFileInfo | string $path, int $mode = 0777): SplFileInfo
     {
         $splEntity = $this->createSplFileInfo($path);
 
@@ -153,7 +153,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function emptyDir($path): void
+    public function emptyDir(SplFileInfo | string $path): void
     {
         $splEntity = $this->createSplFileInfo($path);
 
@@ -188,7 +188,7 @@ class FileSystemHelper implements FileSystemHelperInterface
     /**
      * {@inheritDoc}
      */
-    public function iterateDirectory($dir, Closure $callback): void
+    public function iterateDirectory(SplFileInfo | string $dir, Closure $callback): void
     {
         $splEntity = $this->createSplFileInfo($dir);
 
@@ -306,13 +306,11 @@ class FileSystemHelper implements FileSystemHelperInterface
      *
      * @throws FileSystemException
      */
-    private function createSplFileInfo($data): SplFileInfo
+    private function createSplFileInfo(SplFileInfo | string $data): SplFileInfo
     {
         if ($data instanceof SplFileInfo) {
             return $data;
-        }
-
-        if (\is_string($data)) {
+        } elseif (\is_string($data)) {
             $trimmedData = rtrim(trim($data), '/\\');
             if ($trimmedData === '') {
                 $message = 'Can not create SplFileInfo from empty string.';

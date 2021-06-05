@@ -88,19 +88,6 @@ class FileSystemHelperTest extends BaseCase
     /**
      * @throws Throwable
      */
-    public function testRemoveWrongTypeException(): void
-    {
-        $file = [];
-
-        $helper = new FileSystemHelper();
-
-        $this->expectException(FileSystemException::class);
-        $helper->remove($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
     public function testRemoveIfExistsFile(): void
     {
         $file = $this->getPathToTestFile();
