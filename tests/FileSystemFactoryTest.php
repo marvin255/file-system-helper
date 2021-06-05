@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Marvin255\FileSystemHelper\Tests;
 
 use Marvin255\FileSystemHelper\FileSystemFactory;
-use Marvin255\FileSystemHelper\FileSystemHelperInterface;
+use Marvin255\FileSystemHelper\FileSystemHelper;
 use Throwable;
 
 /**
@@ -20,6 +20,6 @@ class FileSystemFactoryTest extends BaseCase
     {
         $helper = FileSystemFactory::create();
 
-        $this->assertInstanceOf(FileSystemHelperInterface::class, $helper);
+        $this->assertInstanceOf(FileSystemHelper::class, $helper);
     }
 }
