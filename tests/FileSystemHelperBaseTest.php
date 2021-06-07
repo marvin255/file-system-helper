@@ -17,6 +17,28 @@ class FileSystemHelperBaseTest extends BaseCase
     /**
      * @throws Throwable
      */
+    public function testEmptyBasePathInConstructException(): void
+    {
+        $this->expectException(FileSystemException::class);
+        new FileSystemHelperBase('');
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveFileOutOfRestrictedFolderException(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase('/test-folder');
+
+        $this->expectException(FileSystemException::class);
+        $helper->remove($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testRemoveFile(): void
     {
         $file = $this->getPathToTestFile();

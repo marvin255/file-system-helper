@@ -14,6 +14,27 @@ use SplFileInfo;
  */
 class FileSystemHelperBase implements FileSystemHelper
 {
+    private ?string $baseFolder;
+
+    public function __construct(?string $baseFolder = null)
+    {
+        if ($baseFolder !== null) {
+            $baseFolder = str_replace(
+                ['\\', '/'],
+                \DIRECTORY_SEPARATOR,
+                trim($baseFolder)
+            );
+        }
+
+        if ($baseFolder === '') {
+            throw $this->createException(
+                "Base folder can't be empty. Set non empty string or null"
+            );
+        }
+
+        $this->baseFolder = $baseFolder;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -281,18 +302,25 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     private function convertToSplFileInfo(SplFileInfo | string $data): SplFileInfo
     {
-        if ($data instanceof SplFileInfo) {
-            return $data;
+        if (\is_string($data)) {
+            $trimmedData = trim($data);
+            if ($trimmedData === '') {
+                throw $this->createException(
+                    "Can't create SplFileInfo using empty string"
+                );
+            }
+            $data = new SplFileInfo($trimmedData);
         }
 
-        $trimmedData = trim($data);
-        if ($trimmedData === '') {
+        if ($this->baseFolder !== null && mb_strpos($data->getPathName(), $this->baseFolder) !== 0) {
             throw $this->createException(
-                "Can't create SplFileInfo using empty string"
+                "Not allowed path '%s'. All paths must be within base directory '%s'",
+                $data,
+                $this->baseFolder
             );
         }
 
-        return new SplFileInfo($trimmedData);
+        return $data;
     }
 
     /**
