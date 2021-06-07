@@ -172,7 +172,10 @@ class FileSystemHelperBase implements FileSystemHelper
         $dir = $this->convertToSplFileInfo($path);
 
         if ($dir->isFile() || $dir->isDir()) {
-            throw $this->createException("Entity '%s' already exists", $dir);
+            throw $this->createException(
+                "Entity '%s' already exists",
+                $dir
+            );
         }
 
         $this->runPhpFunction(
@@ -207,7 +210,10 @@ class FileSystemHelperBase implements FileSystemHelper
         $dir = $this->convertToSplFileInfo($path);
 
         if (!$dir->isDir()) {
-            throw $this->createException("Directory '%s' must exist to be emptied", $dir);
+            throw $this->createException(
+                "Directory '%s' must exist to be emptied",
+                $dir
+            );
         }
 
         $this->iterateDirectory(
@@ -226,7 +232,9 @@ class FileSystemHelperBase implements FileSystemHelper
         $dir = sys_get_temp_dir();
 
         if (empty($dir) || !is_dir($dir)) {
-            throw $this->createException("Can't find system temporary directory");
+            throw $this->createException(
+                "Can't find system temporary directory"
+            );
         }
 
         return $this->convertToSplFileInfo($dir);
@@ -279,7 +287,9 @@ class FileSystemHelperBase implements FileSystemHelper
 
         $trimmedData = trim($data);
         if ($trimmedData === '') {
-            throw $this->createException("Can't create SplFileInfo using empty string");
+            throw $this->createException(
+                "Can't create SplFileInfo using empty string"
+            );
         }
 
         return new SplFileInfo($trimmedData);
@@ -298,7 +308,10 @@ class FileSystemHelperBase implements FileSystemHelper
         $res = (bool) \call_user_func_array($functionName, $params);
 
         if (!$res) {
-            throw $this->createException("Got false result from {$functionName}");
+            throw $this->createException(
+                "Got false result from '%s' function",
+                $functionName
+            );
         }
     }
 
