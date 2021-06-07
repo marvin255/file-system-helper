@@ -10,10 +10,12 @@ namespace Marvin255\FileSystemHelper;
 class FileSystemFactory
 {
     /**
-     * Cretaes new FileSystemHelperInterface instance with default settings.
+     * Creates new FileSystemHelperInterface instance with default settings.
+     *
+     * @retrurn FileSystemHelper
      */
-    public static function create(): FileSystemHelperInterface
+    public static function create(): FileSystemHelper
     {
-        return new FileSystemHelper();
+        return new FileSystemHelperBase();
     }
 }

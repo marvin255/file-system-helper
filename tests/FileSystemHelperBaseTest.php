@@ -5,15 +5,37 @@ declare(strict_types=1);
 namespace Marvin255\FileSystemHelper\Tests;
 
 use Marvin255\FileSystemHelper\FileSystemException;
-use Marvin255\FileSystemHelper\FileSystemHelper;
+use Marvin255\FileSystemHelper\FileSystemHelperBase;
 use SplFileInfo;
 use Throwable;
 
 /**
  * @internal
  */
-class FileSystemHelperTest extends BaseCase
+class FileSystemHelperBaseTest extends BaseCase
 {
+    /**
+     * @throws Throwable
+     */
+    public function testEmptyBasePathInConstructException(): void
+    {
+        $this->expectException(FileSystemException::class);
+        new FileSystemHelperBase('');
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveFileOutOfRestrictedFolderException(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase('/test-folder');
+
+        $this->expectException(FileSystemException::class);
+        $helper->remove($file);
+    }
+
     /**
      * @throws Throwable
      */
@@ -21,7 +43,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->remove($file);
 
         $this->assertFileDoesNotExist($file);
@@ -34,7 +56,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->remove(new SplFileInfo($file));
 
         $this->assertFileDoesNotExist($file);
@@ -50,7 +72,7 @@ class FileSystemHelperTest extends BaseCase
         $nestedDir = $this->getPathToTestDir($dir . '/nested');
         $nestedFileSecondLevel = $this->getPathToTestDir($nestedDir . '/nested_second.txt');
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->remove($dir);
 
         $this->assertFileDoesNotExist($nestedFile);
@@ -66,7 +88,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = '/test_file_not_exist.txt';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->remove($file);
@@ -79,20 +101,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = '';
 
-        $helper = new FileSystemHelper();
-
-        $this->expectException(FileSystemException::class);
-        $helper->remove($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveWrongTypeException(): void
-    {
-        $file = [];
-
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->remove($file);
@@ -105,7 +114,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->removeIfExists($file);
 
         $this->assertFileDoesNotExist($file);
@@ -118,7 +127,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->removeIfExists(new SplFileInfo($file));
 
         $this->assertFileDoesNotExist($file);
@@ -134,7 +143,7 @@ class FileSystemHelperTest extends BaseCase
         $nestedDir = $this->getPathToTestDir($dir . '/nested');
         $nestedFileSecondLevel = $this->getPathToTestDir($nestedDir . '/nested_second.txt');
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->removeIfExists($dir);
 
         $this->assertFileDoesNotExist($nestedFile);
@@ -150,7 +159,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $file = '/test_file_not_exist.txt';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $helper->removeIfExists($file);
 
@@ -166,7 +175,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getPathToTestFile($dir . '/test.txt');
         $to = $dir . '/test_copy.txt';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->copy($from, $to);
 
         $this->assertFileExists($to);
@@ -187,7 +196,7 @@ class FileSystemHelperTest extends BaseCase
         $destinationNestedFile = $to . '/nested.txt';
         $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->copy($from, $to);
 
         $this->assertDirectoryExists($to);
@@ -205,7 +214,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getTempDir() . '/non_existed_file';
         $to = $this->getTempDir() . '/destination';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->copy($from, $to);
@@ -219,7 +228,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getPathToTestDir();
         $to = $this->getPathToTestDir();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->copy($from, $to);
@@ -233,7 +242,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getPathToTestDir();
         $to = '/test/destination/folder';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->copy($from, $to);
@@ -248,7 +257,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getPathToTestFile($dir . '/test.txt');
         $to = $dir . '/test_rename.txt';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->rename($from, $to);
 
         $this->assertFileExists($to);
@@ -269,7 +278,7 @@ class FileSystemHelperTest extends BaseCase
         $destinationNestedFile = $to . '/nested.txt';
         $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->rename($from, $to);
 
         $this->assertDirectoryExists($to);
@@ -288,7 +297,7 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getTempDir() . '/non_existed_file';
         $to = $this->getTempDir() . '/destination';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->rename($from, $to);
@@ -302,7 +311,22 @@ class FileSystemHelperTest extends BaseCase
         $from = $this->getPathToTestDir();
         $to = $this->getPathToTestDir();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->rename($from, $to);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRenameUnexistedParentDestination(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $from = $this->getPathToTestFile($dir . '/test.txt');
+        $to = $dir . '/unexisted_folder/test_rename.txt';
+
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->rename($from, $to);
@@ -316,7 +340,7 @@ class FileSystemHelperTest extends BaseCase
         $dir = $this->getPathToTestDir();
         $newDir = $dir . '/nested1/nested2/nested3';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->mkdir($newDir);
 
         $this->assertDirectoryExists($newDir);
@@ -329,7 +353,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $dir = $this->getPathToTestDir();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->mkdir($dir);
@@ -343,7 +367,7 @@ class FileSystemHelperTest extends BaseCase
         $dir = $this->getPathToTestDir();
         $newDir = $dir . '/nested1/nested2/nested3';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->mkdirIfNotExist($newDir);
 
         $this->assertDirectoryExists($newDir);
@@ -356,7 +380,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $dir = $this->getPathToTestDir();
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->mkdirIfNotExist($dir);
 
         $this->assertDirectoryExists($dir);
@@ -372,7 +396,7 @@ class FileSystemHelperTest extends BaseCase
         $nestedDir = $this->getPathToTestDir($dir . '/nested');
         $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $helper->emptyDir($dir);
 
         $this->assertDirectoryExists($dir);
@@ -388,7 +412,7 @@ class FileSystemHelperTest extends BaseCase
     {
         $dir = '/unexisted/dir';
 
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
         $helper->emptyDir($dir);
@@ -399,9 +423,25 @@ class FileSystemHelperTest extends BaseCase
      */
     public function testGetTmpDir(): void
     {
-        $helper = new FileSystemHelper();
+        $helper = new FileSystemHelperBase();
         $tmpDir = $helper->getTmpDir();
 
         $this->assertInstanceOf(SplFileInfo::class, $tmpDir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testIterateNonDirectoryException(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->iterateDirectory(
+            $file,
+            function (): void {}
+        );
     }
 }
