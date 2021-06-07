@@ -38,7 +38,7 @@ interface FileSystemHelper
      *
      * @throws FileSystemException
      */
-    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): void;
+    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): SplFileInfo;
 
     /**
      * Renames file system entity.
@@ -48,7 +48,7 @@ interface FileSystemHelper
      *
      * @throws FileSystemException
      */
-    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): void;
+    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): SplFileInfo;
 
     /**
      * Creates new folder by path.

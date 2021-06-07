@@ -8,7 +8,6 @@ use Closure;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
-use Throwable;
 
 /**
  * Object to manipulate files and folders.
@@ -20,17 +19,29 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function remove(SplFileInfo | string $entity): void
     {
-        $splEntity = $this->createSplFileInfo($entity);
-
-        if (!$this->isSplEntityExists($splEntity)) {
-            $message = sprintf("Can not find entity '%s' to remove.", $splEntity->getPath());
-            throw new FileSystemException($message);
-        }
+        $splEntity = $this->convertToSplFileInfo($entity);
 
         if ($splEntity->isFile()) {
-            $this->removeFile($splEntity);
+            $this->runPhpFunction(
+                'unlink',
+                $splEntity->getRealPath()
+            );
         } elseif ($splEntity->isDir()) {
-            $this->removeDir($splEntity);
+            $this->iterateDirectory(
+                $splEntity,
+                function (SplFileInfo $file): void {
+                    $this->remove($file);
+                }
+            );
+            $this->runPhpFunction(
+                'rmdir',
+                $splEntity->getRealPath()
+            );
+        } else {
+            throw $this->createException(
+                "Can't find entity '%s' to remove",
+                $splEntity
+            );
         }
     }
 
@@ -39,77 +50,118 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function removeIfExists(SplFileInfo | string $entity): void
     {
-        $splEntity = $this->createSplFileInfo($entity);
+        $splEntity = $this->convertToSplFileInfo($entity);
 
-        if ($splEntity->isFile()) {
-            $this->removeFile($splEntity);
-        } elseif ($splEntity->isDir()) {
-            $this->removeDir($splEntity);
+        if ($splEntity->isFile() || $splEntity->isDir()) {
+            $this->remove($splEntity);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): void
+    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): SplFileInfo
     {
-        $fromSplEntity = $this->createSplFileInfo($from);
-        $toSplEntity = $this->createSplFileInfo($to);
+        $source = $this->convertToSplFileInfo($from);
+        $target = $this->convertToSplFileInfo($to);
 
-        if (!$this->isSplEntityExists($fromSplEntity)) {
-            $message = sprintf("Can not find source entity '%s' to copy.", $fromSplEntity->getPath());
-            throw new FileSystemException($message);
+        if (!$source->isDir() && !$source->isFile()) {
+            throw $this->createException(
+                "Can't find source '%s' to copy",
+                $from
+            );
         }
 
-        if ($this->isSplEntityExists($toSplEntity)) {
-            $message = sprintf("Target entity '%s' to copy already exists.", $toSplEntity->getPath());
-            throw new FileSystemException($message);
+        if ($target->isFile() || $target->isDir()) {
+            throw $this->createException(
+                "Target path '%s' for copy '%s' already exists",
+                $source,
+                $target
+            );
         }
 
-        $parent = $this->createSplFileInfo($toSplEntity->getPath());
+        $parent = $this->convertToSplFileInfo($target->getPath());
 
-        if (!$this->isSplEntityExists($parent)) {
-            $message = sprintf("Target path '%s' for copying does not exist.", $parent->getPathName());
-            throw new FileSystemException($message);
+        if (!$parent->isDir()) {
+            throw $this->createException(
+                "Target directory '%s' for copying doesn't exist",
+                $parent
+            );
         }
 
         if (!$parent->isWritable()) {
-            $message = sprintf("Target path '%s' for copying is not writable.", $parent->getPathName());
-            throw new FileSystemException($message);
+            throw $this->createException(
+                "Target directory '%s' for copying isn't writable",
+                $parent
+            );
         }
 
-        if ($fromSplEntity->isFile()) {
-            $this->copyFile($fromSplEntity, $toSplEntity);
-        } elseif ($fromSplEntity->isDir()) {
-            $this->copyDir($fromSplEntity, $toSplEntity);
+        if ($source->isFile()) {
+            $this->runPhpFunction(
+                'copy',
+                $source->getRealPath(),
+                $target->getPathname()
+            );
+        } elseif ($source->isDir()) {
+            $this->mkdir($target);
+            $this->iterateDirectory(
+                $source,
+                function (SplFileInfo $file) use ($target): void {
+                    $nestedPath = $target->getPathname() . \DIRECTORY_SEPARATOR . $file->getBasename();
+                    $nestedTarget = new SplFileInfo($nestedPath);
+                    $this->copy($file, $nestedTarget);
+                }
+            );
         }
+
+        return $target;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): void
+    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): SplFileInfo
     {
-        $fromSplEntity = $this->createSplFileInfo($from);
-        $toSplEntity = $this->createSplFileInfo($to);
+        $source = $this->convertToSplFileInfo($from);
+        $destination = $this->convertToSplFileInfo($to);
 
-        if (!$this->isSplEntityExists($fromSplEntity)) {
-            $message = sprintf("Can not find source entity '%s' to rename.", $fromSplEntity->getPathName());
-            throw new FileSystemException($message);
+        if (!$source->isFile() && !$source->isDir()) {
+            throw $this->createException(
+                "Can't find source entity '%s' to rename",
+                $source
+            );
         }
 
-        if ($this->isSplEntityExists($toSplEntity)) {
-            $message = sprintf("Target entity '%s' to rename already exists.", $toSplEntity->getPathName());
-            throw new FileSystemException($message);
+        if ($destination->isFile() || $destination->isDir()) {
+            throw $this->createException(
+                "Target entity '%s' to rename already exists",
+                $destination
+            );
         }
 
-        $this->safeRunPhpFunction(
+        $parent = $this->convertToSplFileInfo($destination->getPath());
+
+        if (!$parent->isDir()) {
+            throw $this->createException(
+                "Target directory '%s' for renaming doesn't exist",
+                $parent
+            );
+        }
+
+        if (!$parent->isWritable()) {
+            throw $this->createException(
+                "Target directory '%s' for renaming isn't writable",
+                $parent
+            );
+        }
+
+        $this->runPhpFunction(
             'rename',
-            [
-                $fromSplEntity->getRealPath(),
-                $toSplEntity->getPathName(),
-            ]
+            $source->getRealPath(),
+            $destination->getPathName()
         );
+
+        return $destination;
     }
 
     /**
@@ -117,23 +169,20 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function mkdir(SplFileInfo | string $path, int $mode = 0777): SplFileInfo
     {
-        $splEntity = $this->createSplFileInfo($path);
+        $dir = $this->convertToSplFileInfo($path);
 
-        if ($this->isSplEntityExists($splEntity)) {
-            $message = sprintf("Directory '%s' already exists.", $splEntity->getPathName());
-            throw new FileSystemException($message);
+        if ($dir->isFile() || $dir->isDir()) {
+            throw $this->createException("Entity '%s' already exists", $dir);
         }
 
-        $this->safeRunPhpFunction(
+        $this->runPhpFunction(
             'mkdir',
-            [
-                $splEntity->getPathname(),
-                $mode,
-                true,
-            ]
+            $dir->getPathname(),
+            $mode,
+            true
         );
 
-        return $splEntity;
+        return $dir;
     }
 
     /**
@@ -141,13 +190,13 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function mkdirIfNotExist(SplFileInfo | string $path, int $mode = 0777): SplFileInfo
     {
-        $splEntity = $this->createSplFileInfo($path);
+        $dir = $this->convertToSplFileInfo($path);
 
-        if ($this->isSplEntityExists($splEntity)) {
-            return $splEntity;
+        if ($dir->isDir()) {
+            return $dir;
         }
 
-        return $this->mkdir($splEntity, $mode);
+        return $this->mkdir($dir, $mode);
     }
 
     /**
@@ -155,15 +204,14 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function emptyDir(SplFileInfo | string $path): void
     {
-        $splEntity = $this->createSplFileInfo($path);
+        $dir = $this->convertToSplFileInfo($path);
 
-        if (!$splEntity->isDir()) {
-            $message = sprintf("Path '%s' must be an existed dir to be emptied.", $splEntity->getPathName());
-            throw new FileSystemException($message);
+        if (!$dir->isDir()) {
+            throw $this->createException("Directory '%s' must exist to be emptied", $dir);
         }
 
         $this->iterateDirectory(
-            $splEntity,
+            $dir,
             function (SplFileInfo $entity): void {
                 $this->remove($entity);
             }
@@ -175,14 +223,13 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function getTmpDir(): SplFileInfo
     {
-        $tmpDir = sys_get_temp_dir();
+        $dir = sys_get_temp_dir();
 
-        if (empty($tmpDir)) {
-            $message = 'Can not find system temporary directory.';
-            throw new FileSystemException($message);
+        if (empty($dir) || !is_dir($dir)) {
+            throw $this->createException("Can't find system temporary directory");
         }
 
-        return $this->createSplFileInfo($tmpDir);
+        return $this->convertToSplFileInfo($dir);
     }
 
     /**
@@ -190,7 +237,14 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function iterateDirectory(SplFileInfo | string $dir, Closure $callback): void
     {
-        $splEntity = $this->createSplFileInfo($dir);
+        $splEntity = $this->convertToSplFileInfo($dir);
+
+        if (!$splEntity->isDir()) {
+            throw $this->createException(
+                "Target '%s' doesn't exist or not a directory",
+                $splEntity
+            );
+        }
 
         $it = new RecursiveDirectoryIterator(
             $splEntity->getRealPath(),
@@ -209,154 +263,66 @@ class FileSystemHelperBase implements FileSystemHelper
     }
 
     /**
-     * Unlinks single file.
-     *
-     * @param SplFileInfo $file
-     *
-     * @throws FileSystemException
-     */
-    private function removeFile(SplFileInfo $file): void
-    {
-        $this->safeRunPhpFunction(
-            'unlink',
-            [
-                $file->getRealPath(),
-            ]
-        );
-    }
-
-    /**
-     * Removes directory and all it's content.
-     *
-     * @param SplFileInfo $dir
-     *
-     * @throws FileSystemException
-     */
-    private function removeDir(SplFileInfo $dir): void
-    {
-        $this->iterateDirectory(
-            $dir,
-            function (SplFileInfo $file): void {
-                if ($file->isDir()) {
-                    $this->removeDir($file);
-                } elseif ($file->isFile()) {
-                    $this->removeFile($file);
-                }
-            }
-        );
-
-        $this->safeRunPhpFunction(
-            'rmdir',
-            [
-                $dir->getRealPath(),
-            ]
-        );
-    }
-
-    /**
-     * Copies file.
-     *
-     * @param SplFileInfo $from
-     * @param SplFileInfo $to
-     *
-     * @throws FileSystemException
-     */
-    private function copyFile(SplFileInfo $from, SplFileInfo $to): void
-    {
-        $this->safeRunPhpFunction(
-            'copy',
-            [
-                $from->getRealPath(),
-                $to->getPathname(),
-            ]
-        );
-    }
-
-    /**
-     * Copies directory.
-     *
-     * @param SplFileInfo $from
-     * @param SplFileInfo $to
-     *
-     * @throws FileSystemException
-     */
-    private function copyDir(SplFileInfo $from, SplFileInfo $to): void
-    {
-        $this->mkdir($to);
-
-        $this->iterateDirectory(
-            $from,
-            function (SplFileInfo $file) use ($to): void {
-                $destination = new SplFileInfo($to->getPathname() . '/' . $file->getBasename());
-                if ($file->isDir()) {
-                    $this->copyDir($file, $destination);
-                } elseif ($file->isFile()) {
-                    $this->copyFile($file, $destination);
-                }
-            }
-        );
-    }
-
-    /**
      * Creates SplFileInfo object from set data.
      *
-     * @param mixed $data
+     * @param SplFileInfo|string $data
      *
      * @return SplFileInfo
      *
      * @throws FileSystemException
      */
-    private function createSplFileInfo(SplFileInfo | string $data): SplFileInfo
+    private function convertToSplFileInfo(SplFileInfo | string $data): SplFileInfo
     {
         if ($data instanceof SplFileInfo) {
             return $data;
-        } elseif (\is_string($data)) {
-            $trimmedData = rtrim(trim($data), '/\\');
-            if ($trimmedData === '') {
-                $message = 'Can not create SplFileInfo from empty string.';
-                throw new FileSystemException($message);
-            }
-
-            return new SplFileInfo($trimmedData);
         }
 
-        $message = 'Data to create SplFileInfo must be a string instance.';
-        throw new FileSystemException($message);
-    }
+        $trimmedData = trim($data);
+        if ($trimmedData === '') {
+            throw $this->createException("Can't create SplFileInfo using empty string");
+        }
 
-    /**
-     * Returns true if SplFileInfo entity exists in file system.
-     *
-     * @param SplFileInfo $entity
-     *
-     * @return bool
-     */
-    private function isSplEntityExists(SplFileInfo $entity): bool
-    {
-        $realPath = $entity->getRealPath();
-
-        return !empty($realPath) && file_exists($realPath);
+        return new SplFileInfo($trimmedData);
     }
 
     /**
      * Runs set php function in try/catch.
      *
-     * @param string $functionName
-     * @param array  $params
+     * @param string  $functionName
+     * @param mixed[] $params
      *
      * @throws FileSystemException
      */
-    private function safeRunPhpFunction(string $functionName, array $params = []): void
+    private function runPhpFunction(string $functionName, ...$params): void
     {
-        try {
-            $res = (bool) \call_user_func_array($functionName, $params);
-        } catch (Throwable $e) {
-            throw new FileSystemException($e->getMessage(), 0, $e);
-        }
+        $res = (bool) \call_user_func_array($functionName, $params);
 
         if (!$res) {
-            $message = sprintf("Error while running '%s',", $functionName);
-            throw new FileSystemException($message);
+            throw $this->createException("Got false result from {$functionName}");
         }
+    }
+
+    /**
+     * Creates FileSystemException.
+     *
+     * @param string                         $message
+     * @param array<int, SplFileInfo|string> $params
+     *
+     * @return FileSystemException
+     */
+    private function createException(string $message, ...$params): FileSystemException
+    {
+        $stringifyParams = array_map(
+            function (SplFileInfo | string $item): string {
+                return $item instanceof SplFileInfo ? $item->getPathName() : $item;
+            },
+            $params
+        );
+
+        $message = rtrim($message, '.') . '.';
+        array_unshift($stringifyParams, $message);
+        $compiledMessage = (string) \call_user_func_array('sprintf', $stringifyParams);
+
+        return new FileSystemException($compiledMessage);
     }
 }

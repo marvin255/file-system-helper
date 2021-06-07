@@ -298,6 +298,21 @@ class FileSystemHelperBaseTest extends BaseCase
     /**
      * @throws Throwable
      */
+    public function testRenameUnexistedParentDestination(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $from = $this->getPathToTestFile($dir . '/test.txt');
+        $to = $dir . '/unexisted_folder/test_rename.txt';
+
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->rename($from, $to);
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function testMkdir(): void
     {
         $dir = $this->getPathToTestDir();
@@ -390,5 +405,21 @@ class FileSystemHelperBaseTest extends BaseCase
         $tmpDir = $helper->getTmpDir();
 
         $this->assertInstanceOf(SplFileInfo::class, $tmpDir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testIterateNonDirectoryException(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->iterateDirectory(
+            $file,
+            function (): void {}
+        );
     }
 }
