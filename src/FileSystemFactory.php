@@ -12,10 +12,12 @@ class FileSystemFactory
     /**
      * Creates new FileSystemHelperInterface instance with default settings.
      *
-     * @retrurn FileSystemHelper
+     * @param string|null $baseFolder
+     *
+     * @return FileSystemHelper
      */
-    public static function create(): FileSystemHelper
+    public static function create(?string $baseFolder = null): FileSystemHelper
     {
-        return new FileSystemHelperBase();
+        return new FileSystemHelperBase($baseFolder);
     }
 }
