@@ -38,7 +38,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function remove(SplFileInfo | string $entity): void
+    public function remove(SplFileInfo|string $entity): void
     {
         $splEntity = $this->convertToSplFileInfo($entity);
 
@@ -69,7 +69,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function removeIfExists(SplFileInfo | string $entity): void
+    public function removeIfExists(SplFileInfo|string $entity): void
     {
         $splEntity = $this->convertToSplFileInfo($entity);
 
@@ -81,7 +81,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function copy(SplFileInfo | string $from, SplFileInfo | string $to): SplFileInfo
+    public function copy(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo
     {
         $source = $this->convertToSplFileInfo($from);
         $target = $this->convertToSplFileInfo($to);
@@ -141,7 +141,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function rename(SplFileInfo | string $from, SplFileInfo | string $to): SplFileInfo
+    public function rename(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo
     {
         $source = $this->convertToSplFileInfo($from);
         $destination = $this->convertToSplFileInfo($to);
@@ -188,7 +188,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function mkdir(SplFileInfo | string $path, int $mode = 0777): SplFileInfo
+    public function mkdir(SplFileInfo|string $path, int $mode = 0777): SplFileInfo
     {
         $dir = $this->convertToSplFileInfo($path);
 
@@ -212,7 +212,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function mkdirIfNotExist(SplFileInfo | string $path, int $mode = 0777): SplFileInfo
+    public function mkdirIfNotExist(SplFileInfo|string $path, int $mode = 0777): SplFileInfo
     {
         $dir = $this->convertToSplFileInfo($path);
 
@@ -226,7 +226,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function emptyDir(SplFileInfo | string $path): void
+    public function emptyDir(SplFileInfo|string $path): void
     {
         $dir = $this->convertToSplFileInfo($path);
 
@@ -264,7 +264,7 @@ class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function iterateDirectory(SplFileInfo | string $dir, Closure $callback): void
+    public function iterateDirectory(SplFileInfo|string $dir, Closure $callback): void
     {
         $splEntity = $this->convertToSplFileInfo($dir);
 
@@ -300,7 +300,7 @@ class FileSystemHelperBase implements FileSystemHelper
      *
      * @throws FileSystemException
      */
-    private function convertToSplFileInfo(SplFileInfo | string $data): SplFileInfo
+    private function convertToSplFileInfo(SplFileInfo|string $data): SplFileInfo
     {
         if (\is_string($data)) {
             $trimmedData = trim($data);
@@ -354,7 +354,7 @@ class FileSystemHelperBase implements FileSystemHelper
     private function createException(string $message, ...$params): FileSystemException
     {
         $stringifyParams = array_map(
-            function (SplFileInfo | string $item): string {
+            function (SplFileInfo|string $item): string {
                 return $item instanceof SplFileInfo ? $item->getPathName() : $item;
             },
             $params
