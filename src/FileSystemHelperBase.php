@@ -50,9 +50,7 @@ class FileSystemHelperBase implements FileSystemHelper
         } elseif ($splEntity->isDir()) {
             $this->iterateDirectory(
                 $splEntity,
-                function (SplFileInfo $file): void {
-                    $this->remove($file);
-                }
+                fn (SplFileInfo $file): mixed => $this->remove($file)
             );
             $this->runPhpFunction(
                 'rmdir',
@@ -239,9 +237,7 @@ class FileSystemHelperBase implements FileSystemHelper
 
         $this->iterateDirectory(
             $dir,
-            function (SplFileInfo $entity): void {
-                $this->remove($entity);
-            }
+            fn (SplFileInfo $file): mixed => $this->remove($file)
         );
     }
 
