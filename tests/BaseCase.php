@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
+use SplFileInfo;
 
 /**
  * Basic class for all tests in suite.
@@ -115,6 +116,7 @@ abstract class BaseCase extends TestCase
                 $folderPath,
                 RecursiveDirectoryIterator::SKIP_DOTS
             );
+            /** @var iterable<SplFileInfo> */
             $files = new RecursiveIteratorIterator(
                 $it,
                 RecursiveIteratorIterator::CHILD_FIRST
