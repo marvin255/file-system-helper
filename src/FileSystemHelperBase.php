@@ -40,7 +40,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function remove(SplFileInfo|string $entity): void
     {
-        $splEntity = $this->convertToSplFileInfo($entity);
+        $splEntity = $this->makeFileInfoAndCheckBasePath($entity);
 
         if ($splEntity->isFile()) {
             $this->runPhpFunction(
@@ -69,7 +69,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function removeIfExists(SplFileInfo|string $entity): void
     {
-        $splEntity = $this->convertToSplFileInfo($entity);
+        $splEntity = $this->makeFileInfoAndCheckBasePath($entity);
 
         if ($splEntity->isFile() || $splEntity->isDir()) {
             $this->remove($splEntity);
@@ -81,8 +81,8 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function copy(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo
     {
-        $source = $this->convertToSplFileInfo($from);
-        $target = $this->convertToSplFileInfo($to);
+        $source = $this->makeFileInfoAndCheckBasePath($from);
+        $target = $this->makeFileInfoAndCheckBasePath($to);
 
         if (!$source->isDir() && !$source->isFile()) {
             throw $this->createException(
@@ -99,7 +99,7 @@ class FileSystemHelperBase implements FileSystemHelper
             );
         }
 
-        $parent = $this->convertToSplFileInfo($target->getPath());
+        $parent = $this->makeFileInfoAndCheckBasePath($target->getPath());
 
         if (!$parent->isDir()) {
             throw $this->createException(
@@ -141,8 +141,8 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function rename(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo
     {
-        $source = $this->convertToSplFileInfo($from);
-        $destination = $this->convertToSplFileInfo($to);
+        $source = $this->makeFileInfoAndCheckBasePath($from);
+        $destination = $this->makeFileInfoAndCheckBasePath($to);
 
         if (!$source->isFile() && !$source->isDir()) {
             throw $this->createException(
@@ -158,7 +158,7 @@ class FileSystemHelperBase implements FileSystemHelper
             );
         }
 
-        $parent = $this->convertToSplFileInfo($destination->getPath());
+        $parent = $this->makeFileInfoAndCheckBasePath($destination->getPath());
 
         if (!$parent->isDir()) {
             throw $this->createException(
@@ -188,7 +188,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function mkdir(SplFileInfo|string $path, int $mode = 0777): SplFileInfo
     {
-        $dir = $this->convertToSplFileInfo($path);
+        $dir = $this->makeFileInfoAndCheckBasePath($path);
 
         if ($dir->isFile() || $dir->isDir()) {
             throw $this->createException(
@@ -212,7 +212,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function mkdirIfNotExist(SplFileInfo|string $path, int $mode = 0777): SplFileInfo
     {
-        $dir = $this->convertToSplFileInfo($path);
+        $dir = $this->makeFileInfoAndCheckBasePath($path);
 
         if ($dir->isDir()) {
             return $dir;
@@ -226,7 +226,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function emptyDir(SplFileInfo|string $path): void
     {
-        $dir = $this->convertToSplFileInfo($path);
+        $dir = $this->makeFileInfoAndCheckBasePath($path);
 
         if (!$dir->isDir()) {
             throw $this->createException(
@@ -254,7 +254,7 @@ class FileSystemHelperBase implements FileSystemHelper
             );
         }
 
-        return $this->convertToSplFileInfo($dir);
+        return $this->makeFileInfoAndCheckBasePath($dir);
     }
 
     /**
@@ -262,7 +262,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     public function iterateDirectory(SplFileInfo|string $dir, Closure $callback): void
     {
-        $splEntity = $this->convertToSplFileInfo($dir);
+        $splEntity = $this->makeFileInfoAndCheckBasePath($dir);
 
         if (!$splEntity->isDir()) {
             throw $this->createException(
@@ -288,6 +288,26 @@ class FileSystemHelperBase implements FileSystemHelper
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function makeFileInfo(mixed $path): SplFileInfo
+    {
+        if (\is_string($path)) {
+            $trimmedPath = trim($path);
+            if ($trimmedPath === '') {
+                throw $this->createException("Can't create SplFileInfo using empty string");
+            }
+            $fileInfo = new SplFileInfo($trimmedPath);
+        } elseif ($path instanceof SplFileInfo) {
+            $fileInfo = $path;
+        } else {
+            throw $this->createException("Can't create SplFileInfo from given object type");
+        }
+
+        return $fileInfo;
+    }
+
+    /**
      * Creates SplFileInfo object from set data.
      *
      * @param SplFileInfo|string $data
@@ -296,17 +316,9 @@ class FileSystemHelperBase implements FileSystemHelper
      *
      * @throws FileSystemException
      */
-    private function convertToSplFileInfo(SplFileInfo|string $data): SplFileInfo
+    private function makeFileInfoAndCheckBasePath(SplFileInfo|string $data): SplFileInfo
     {
-        if (\is_string($data)) {
-            $trimmedData = trim($data);
-            if ($trimmedData === '') {
-                throw $this->createException(
-                    "Can't create SplFileInfo using empty string"
-                );
-            }
-            $data = new SplFileInfo($trimmedData);
-        }
+        $data = $this->makeFileInfo($data);
 
         if ($this->baseFolder !== null && mb_strpos($data->getPathName(), $this->baseFolder) !== 0) {
             throw $this->createException(

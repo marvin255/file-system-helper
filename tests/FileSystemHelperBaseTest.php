@@ -444,4 +444,54 @@ class FileSystemHelperBaseTest extends BaseCase
             function (): void {}
         );
     }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMakeFileInfoString(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase();
+        $fileInfo = $helper->makeFileInfo($file);
+
+        $this->assertInstanceOf(SplFileInfo::class, $fileInfo);
+        $this->assertSame($file, $fileInfo->getPathname());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMakeFileInfoObject(): void
+    {
+        $file = new SplFileInfo($this->getPathToTestFile());
+
+        $helper = new FileSystemHelperBase();
+        $fileInfo = $helper->makeFileInfo($file);
+
+        $this->assertInstanceOf(SplFileInfo::class, $fileInfo);
+        $this->assertSame($file->getPathname(), $fileInfo->getPathname());
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMakeFileInfoEmptyString(): void
+    {
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->makeFileInfo('    ');
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMakeFileInfoWrongInput(): void
+    {
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->makeFileInfo(true);
+    }
 }

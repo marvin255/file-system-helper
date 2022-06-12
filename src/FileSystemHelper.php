@@ -97,6 +97,19 @@ interface FileSystemHelper
      *
      * @param SplFileInfo|string $dir
      * @param Closure            $callback
+     *
+     * @throws FileSystemException
      */
     public function iterateDirectory(SplFileInfo|string $dir, Closure $callback): void;
+
+    /**
+     * Tries to create SplFileInfo object from the given path.
+     *
+     * @param mixed $path
+     *
+     * @return SplFileInfo
+     *
+     * @throws FileSystemException
+     */
+    public function makeFileInfo(mixed $path): SplFileInfo;
 }
