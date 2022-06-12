@@ -350,9 +350,7 @@ class FileSystemHelperBase implements FileSystemHelper
     private function createException(string $message, ...$params): FileSystemException
     {
         $stringifyParams = array_map(
-            function (SplFileInfo|string $item): string {
-                return $item instanceof SplFileInfo ? $item->getPathName() : $item;
-            },
+            fn (SplFileInfo|string $item): string => $item instanceof SplFileInfo ? $item->getPathName() : $item,
             $params
         );
 
