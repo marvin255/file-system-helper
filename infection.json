@@ -1,0 +1,32 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "text": "infection.log"
+    },
+    "mutators": {
+        "@default": true,
+        "Throw_": {
+            "ignore": [
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::getTmpDir",
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::copy",
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::rename",
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::runPhpFunction"
+            ]
+        },
+        "LogicalOr": {
+            "ignore": [
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::getTmpDir"
+            ]
+        },
+        "TrueValue": {
+            "ignore": [
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::mkdir"
+            ]
+        }
+    }
+}

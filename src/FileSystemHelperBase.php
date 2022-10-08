@@ -12,27 +12,32 @@ use SplFileInfo;
 /**
  * Object to manipulate files and folders.
  */
-class FileSystemHelperBase implements FileSystemHelper
+final class FileSystemHelperBase implements FileSystemHelper
 {
-    private ?string $baseFolder;
+    private readonly ?string $baseFolder;
 
     public function __construct(?string $baseFolder = null)
     {
+        $validatedBaseFolder = null;
+
         if ($baseFolder !== null) {
-            $baseFolder = str_replace(
-                ['\\', '/'],
-                \DIRECTORY_SEPARATOR,
-                trim($baseFolder)
-            );
+            $validatedBaseFolder = str_replace(['\\', '/'], \DIRECTORY_SEPARATOR, trim($baseFolder));
+            if ($validatedBaseFolder === '') {
+                throw $this->createException(
+                    "Base folder can't be empty. Set non empty string or null"
+                );
+            }
+
+            $validatedBaseFolder = realpath($validatedBaseFolder);
+            if ($validatedBaseFolder === false) {
+                throw $this->createException(
+                    "Base folder '%s' doesn't exist",
+                    $baseFolder
+                );
+            }
         }
 
-        if ($baseFolder === '') {
-            throw $this->createException(
-                "Base folder can't be empty. Set non empty string or null"
-            );
-        }
-
-        $this->baseFolder = $baseFolder;
+        $this->baseFolder = $validatedBaseFolder;
     }
 
     /**
@@ -204,6 +209,9 @@ class FileSystemHelperBase implements FileSystemHelper
             true
         );
 
+        // recoursive directory creation sometimes can't set permissions for nested folder
+        chmod($dir->getPathname(), $mode);
+
         return $dir;
     }
 
@@ -228,7 +236,12 @@ class FileSystemHelperBase implements FileSystemHelper
     {
         $dir = $this->makeFileInfoAndCheckBasePath($path);
 
-        if (!$dir->isDir()) {
+        if ($dir->isFile()) {
+            throw $this->createException(
+                "Can't empty directory '%s' because it's a file",
+                $dir
+            );
+        } elseif (!$dir->isDir()) {
             throw $this->createException(
                 "Directory '%s' must exist to be emptied",
                 $dir
@@ -320,7 +333,7 @@ class FileSystemHelperBase implements FileSystemHelper
     {
         $data = $this->makeFileInfo($data);
 
-        if ($this->baseFolder !== null && mb_strpos($data->getPathName(), $this->baseFolder) !== 0) {
+        if ($this->baseFolder !== null && strpos($data->getPathName(), $this->baseFolder) !== 0) {
             throw $this->createException(
                 "Not allowed path '%s'. All paths must be within base directory '%s'",
                 $data,
@@ -341,9 +354,7 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     private function runPhpFunction(string $functionName, ...$params): void
     {
-        $res = (bool) \call_user_func_array($functionName, $params);
-
-        if (!$res) {
+        if (\call_user_func_array($functionName, $params) === false) {
             throw $this->createException(
                 "Got false result from '%s' function",
                 $functionName
@@ -361,14 +372,10 @@ class FileSystemHelperBase implements FileSystemHelper
      */
     private function createException(string $message, ...$params): FileSystemException
     {
-        $stringifyParams = array_map(
-            fn (SplFileInfo|string $item): string => $item instanceof SplFileInfo ? $item->getPathName() : $item,
-            $params
-        );
+        array_unshift($params, $message);
 
-        $message = rtrim($message, '.') . '.';
-        array_unshift($stringifyParams, $message);
-        $compiledMessage = (string) \call_user_func_array('sprintf', $stringifyParams);
+        /** @var string */
+        $compiledMessage = \call_user_func_array('sprintf', $params);
 
         return new FileSystemException($compiledMessage);
     }
