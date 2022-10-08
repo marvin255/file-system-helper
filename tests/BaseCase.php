@@ -36,7 +36,7 @@ abstract class BaseCase extends TestCase
                     "Can't find or write temporary folder: {$this->tempDir}"
                 );
             }
-            $this->tempDir .= \DIRECTORY_SEPARATOR . 'fias_component';
+            $this->tempDir .= \DIRECTORY_SEPARATOR . md5(random_bytes(20));
             $this->removeDir($this->tempDir);
             if (!mkdir($this->tempDir, 0777, true)) {
                 throw new RuntimeException(
@@ -63,7 +63,7 @@ abstract class BaseCase extends TestCase
             $name = md5(random_bytes(10));
         }
 
-        if (strpos($name, $this->getTempDir()) === 0) {
+        if (strpos($name, $this->getTempDir() . \DIRECTORY_SEPARATOR) === 0) {
             $pathToFolder = $name;
         } else {
             $pathToFolder = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
@@ -142,5 +142,12 @@ abstract class BaseCase extends TestCase
         }
 
         parent::tearDown();
+    }
+
+    protected function assertDirectoryHasPermissions(int $awaitedPermissions, string $directory): void
+    {
+        $awaitedPermissions = sprintf('%o', $awaitedPermissions);
+        $realPermissions = substr(sprintf('%o', fileperms($directory)), -3);
+        $this->assertSame($awaitedPermissions, $realPermissions, 'Directory has correct permissions');
     }
 }

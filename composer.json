@@ -13,7 +13,7 @@
     "sebastian/phpcpd": "^6.0",
     "vimeo/psalm": "^4.0",
     "psalm/plugin-phpunit": "^0.16",
-    "infection/infection": "^0.26.15"
+    "infection/infection": "^0.26.13"
   },
   "autoload": {
     "psr-4": {

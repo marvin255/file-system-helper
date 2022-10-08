@@ -20,7 +20,20 @@ class FileSystemHelperBaseTest extends BaseCase
     public function testEmptyBasePathInConstructException(): void
     {
         $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Base folder can't be empty. Set non empty string or null");
         new FileSystemHelperBase('');
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testEmptyBasePathUnexistedInConstructException(): void
+    {
+        $path = '/test-path-123';
+
+        $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Base folder '{$path}' doesn't exist");
+        new FileSystemHelperBase($path);
     }
 
     /**
@@ -28,12 +41,55 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testRemoveFileOutOfRestrictedFolderException(): void
     {
+        $baseDir = $this->getPathToTestDir();
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelperBase('/test-folder');
+        $helper = new FileSystemHelperBase($baseDir);
 
         $this->expectException(FileSystemException::class);
         $helper->remove($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveFileWithinBaseFolder(): void
+    {
+        $tmpDir = $this->getTempDir();
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase($tmpDir);
+        $helper->remove($file);
+
+        $this->assertFileDoesNotExist($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveFileWithUtf(): void
+    {
+        $tmpDir = $this->getPathToTestDir('тест');
+        $file = $this->getPathToTestFile($tmpDir . '/тест.txt');
+
+        $helper = new FileSystemHelperBase($tmpDir);
+        $helper->remove($file);
+
+        $this->assertFileDoesNotExist($file);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRemoveFileWithinBaseFolderWithBackSlashes(): void
+    {
+        $tmpDir = '   ' . str_replace(['\\', '/'], '\\', $this->getTempDir()) . ' ';
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase($tmpDir);
+        $helper->remove($file);
+
+        $this->assertFileDoesNotExist($file);
     }
 
     /**
@@ -223,10 +279,24 @@ class FileSystemHelperBaseTest extends BaseCase
     /**
      * @throws Throwable
      */
-    public function testCopyExistedDestinationException(): void
+    public function testCopyExistedDirDestinationException(): void
     {
         $from = $this->getPathToTestDir();
         $to = $this->getPathToTestDir();
+
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $helper->copy($from, $to);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testCopyExistedFileDestinationException(): void
+    {
+        $from = $this->getPathToTestFile();
+        $to = $this->getPathToTestFile();
 
         $helper = new FileSystemHelperBase();
 
@@ -338,12 +408,45 @@ class FileSystemHelperBaseTest extends BaseCase
     public function testMkdir(): void
     {
         $dir = $this->getPathToTestDir();
+        $newDir = $dir . '/test_dir';
+        $permissions = 0775;
+
+        $helper = new FileSystemHelperBase();
+        $helper->mkdir($newDir, $permissions);
+
+        $this->assertDirectoryExists($newDir);
+        $this->assertDirectoryHasPermissions($permissions, $newDir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMkdirNested(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $newDir = $dir . '/nested1/nested2/nested3';
+        $permissions = 0775;
+
+        $helper = new FileSystemHelperBase();
+        $helper->mkdir($newDir, $permissions);
+
+        $this->assertDirectoryExists($newDir);
+        $this->assertDirectoryHasPermissions($permissions, $newDir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMkdirDefaultPermissions(): void
+    {
+        $dir = $this->getPathToTestDir();
         $newDir = $dir . '/nested1/nested2/nested3';
 
         $helper = new FileSystemHelperBase();
         $helper->mkdir($newDir);
 
         $this->assertDirectoryExists($newDir);
+        $this->assertDirectoryHasPermissions(0777, $newDir);
     }
 
     /**
@@ -356,6 +459,7 @@ class FileSystemHelperBaseTest extends BaseCase
         $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Entity '{$dir}' already exists");
         $helper->mkdir($dir);
     }
 
@@ -371,6 +475,21 @@ class FileSystemHelperBaseTest extends BaseCase
         $helper->mkdirIfNotExist($newDir);
 
         $this->assertDirectoryExists($newDir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testMkdirIfNotExistDefaultPermissions(): void
+    {
+        $dir = $this->getPathToTestDir();
+        $newDir = $dir . '/nested1/nested2/nested3';
+
+        $helper = new FileSystemHelperBase();
+        $helper->mkdirIfNotExist($newDir);
+
+        $this->assertDirectoryExists($newDir);
+        $this->assertDirectoryHasPermissions(0777, $newDir);
     }
 
     /**
@@ -415,7 +534,22 @@ class FileSystemHelperBaseTest extends BaseCase
         $helper = new FileSystemHelperBase();
 
         $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Directory '{$dir}' must exist to be emptied");
         $helper->emptyDir($dir);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testEmptyDirFileException(): void
+    {
+        $file = $this->getPathToTestFile();
+
+        $helper = new FileSystemHelperBase();
+
+        $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Can't empty directory '{$file}' because it's a file");
+        $helper->emptyDir($file);
     }
 
     /**
