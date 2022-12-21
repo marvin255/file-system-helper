@@ -20,6 +20,7 @@ class FileSystemHelperBaseTest extends BaseCase
         $this->expectExceptionObject(
             new FileSystemException("Base folder can't be empty. Set non empty string or null")
         );
+
         new FileSystemHelperBase('');
     }
 
@@ -33,6 +34,7 @@ class FileSystemHelperBaseTest extends BaseCase
         $this->expectExceptionObject(
             new FileSystemException("Base folder '{$path}' doesn't exist")
         );
+
         new FileSystemHelperBase($path);
     }
 
