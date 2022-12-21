@@ -5,41 +5,41 @@ declare(strict_types=1);
 namespace Marvin255\FileSystemHelper\Tests;
 
 use PHPUnit\Framework\TestCase;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RuntimeException;
-use SplFileInfo;
 
 /**
  * Basic class for all tests in suite.
+ *
+ * @internal
  */
 abstract class BaseCase extends TestCase
 {
-    /**
-     * @var string|null
-     */
-    private $tempDir = null;
+    private ?string $tempDir = null;
+
+    protected function tearDown(): void
+    {
+        if ($this->tempDir) {
+            $this->removeDir($this->tempDir);
+        }
+
+        parent::tearDown();
+    }
 
     /**
      * Returns path to temporary folder.
-     *
-     * @return string
-     *
-     * @throws RuntimeException
      */
     protected function getTempDir(): string
     {
         if ($this->tempDir === null) {
             $this->tempDir = sys_get_temp_dir();
             if (!$this->tempDir || !is_writable($this->tempDir)) {
-                throw new RuntimeException(
+                throw new \RuntimeException(
                     "Can't find or write temporary folder: {$this->tempDir}"
                 );
             }
             $this->tempDir .= \DIRECTORY_SEPARATOR . md5(random_bytes(20));
             $this->removeDir($this->tempDir);
             if (!mkdir($this->tempDir, 0777, true)) {
-                throw new RuntimeException(
+                throw new \RuntimeException(
                     "Can't create temporary folder: {$this->tempDir}"
                 );
             }
@@ -50,12 +50,6 @@ abstract class BaseCase extends TestCase
 
     /**
      * Creates new directory for test and returns it's absolute path.
-     *
-     * @param string $name
-     *
-     * @return string
-     *
-     * @throws RuntimeException
      */
     protected function getPathToTestDir(string $name = ''): string
     {
@@ -69,20 +63,15 @@ abstract class BaseCase extends TestCase
             $pathToFolder = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
         }
 
-        if (!mkdir($pathToFolder, 0777, true)) {
-            throw new RuntimeException("Can't mkdir {$pathToFolder} folder");
+        if (!file_exists($pathToFolder) && !mkdir($pathToFolder, 0777, true)) {
+            throw new \RuntimeException("Can't create {$pathToFolder} folder");
         }
 
         return $pathToFolder;
     }
 
     /**
-     * Creates file witin temporary folder.
-     *
-     * @param string      $name
-     * @param string|null $content
-     *
-     * @return string
+     * Creates file within temporary folder.
      */
     protected function getPathToTestFile(string $name = '', ?string $content = null): string
     {
@@ -96,30 +85,33 @@ abstract class BaseCase extends TestCase
             $pathToFile = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
         }
 
+        $dir = pathinfo($pathToFile, \PATHINFO_DIRNAME);
+        if (!file_exists($dir) && !mkdir($dir, 0777, true)) {
+            throw new \RuntimeException("Can't create folder {$dir} for the tests file {$name}");
+        }
+
         $content = $content === null ? md5(random_bytes(10)) : $content;
         if (file_put_contents($pathToFile, $content) === false) {
-            throw new RuntimeException("Can't create file {$pathToFile}");
+            throw new \RuntimeException("Can't create file {$pathToFile}");
         }
 
         return $pathToFile;
     }
 
     /**
-     * Removes folder.
-     *
-     * @param string $folderPath
+     * Removes set dir with all content.
      */
     protected function removeDir(string $folderPath): void
     {
         if (is_dir($folderPath)) {
-            $it = new RecursiveDirectoryIterator(
+            $it = new \RecursiveDirectoryIterator(
                 $folderPath,
-                RecursiveDirectoryIterator::SKIP_DOTS
+                \RecursiveDirectoryIterator::SKIP_DOTS
             );
-            /** @var iterable<SplFileInfo> */
-            $files = new RecursiveIteratorIterator(
+            /** @var iterable<\SplFileInfo> */
+            $files = new \RecursiveIteratorIterator(
                 $it,
-                RecursiveIteratorIterator::CHILD_FIRST
+                \RecursiveIteratorIterator::CHILD_FIRST
             );
             foreach ($files as $file) {
                 if ($file->isDir()) {
@@ -133,19 +125,33 @@ abstract class BaseCase extends TestCase
     }
 
     /**
-     * Removes temporary directory.
+     * Converts SplFileInfo to string and change delimeters to the set one.
      */
-    protected function tearDown(): void
+    protected function convertPathToString(\SplFileInfo|string $path, string $delimeter = \DIRECTORY_SEPARATOR): string
     {
-        if ($this->tempDir) {
-            $this->removeDir($this->tempDir);
-        }
+        $pathStr = $path instanceof \SplFileInfo ? $path->getPathname() : $path;
 
-        parent::tearDown();
+        return str_replace(['\\', '/'], $delimeter, trim($pathStr));
     }
 
-    protected function assertDirectoryHasPermissions(int $awaitedPermissions, string $directory): void
+    /**
+     * Converts string to SplFileInfo.
+     */
+    protected function convertPathToSpl(\SplFileInfo|string $path): \SplFileInfo
     {
+        if ($path instanceof \SplFileInfo) {
+            return $path;
+        }
+
+        return new \SplFileInfo($path);
+    }
+
+    /**
+     * Assertion that checks that directory has set permissions.
+     */
+    protected function assertDirectoryHasPermissions(int $awaitedPermissions, \SplFileInfo|string $directory): void
+    {
+        $directory = $this->convertPathToString($directory);
         $awaitedPermissions = sprintf('%o', $awaitedPermissions);
         $realPermissions = substr(sprintf('%o', fileperms($directory)), -3);
         $this->assertSame($awaitedPermissions, $realPermissions, 'Directory has correct permissions');

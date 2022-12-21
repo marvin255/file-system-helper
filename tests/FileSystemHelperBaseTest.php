@@ -6,8 +6,6 @@ namespace Marvin255\FileSystemHelper\Tests;
 
 use Marvin255\FileSystemHelper\FileSystemException;
 use Marvin255\FileSystemHelper\FileSystemHelperBase;
-use SplFileInfo;
-use Throwable;
 
 /**
  * @internal
@@ -15,231 +13,238 @@ use Throwable;
 class FileSystemHelperBaseTest extends BaseCase
 {
     /**
-     * @throws Throwable
+     * @test
      */
     public function testEmptyBasePathInConstructException(): void
     {
-        $this->expectException(FileSystemException::class);
-        $this->expectExceptionMessage("Base folder can't be empty. Set non empty string or null");
+        $this->expectExceptionObject(
+            new FileSystemException("Base folder can't be empty. Set non empty string or null")
+        );
+
         new FileSystemHelperBase('');
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testEmptyBasePathUnexistedInConstructException(): void
     {
         $path = '/test-path-123';
 
-        $this->expectException(FileSystemException::class);
-        $this->expectExceptionMessage("Base folder '{$path}' doesn't exist");
+        $this->expectExceptionObject(
+            new FileSystemException("Base folder '{$path}' doesn't exist")
+        );
+
         new FileSystemHelperBase($path);
     }
 
     /**
-     * @throws Throwable
+     * @test
+     *
+     * @dataProvider provideRemove
      */
-    public function testRemoveFileOutOfRestrictedFolderException(): void
+    public function testRemove(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
-        $baseDir = $this->getPathToTestDir();
-        $file = $this->getPathToTestFile();
-
         $helper = new FileSystemHelperBase($baseDir);
 
-        $this->expectException(FileSystemException::class);
-        $helper->remove($file);
-    }
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveFileWithinBaseFolder(): void
-    {
-        $tmpDir = $this->getTempDir();
-        $file = $this->getPathToTestFile();
-
-        $helper = new FileSystemHelperBase($tmpDir);
         $helper->remove($file);
 
-        $this->assertFileDoesNotExist($file);
+        if (!$exception) {
+            $this->assertFileDoesNotExist($this->convertPathToString($file));
+        }
     }
 
     /**
-     * @throws Throwable
+     * @return array<string, mixed[]>
      */
-    public function testRemoveFileWithUtf(): void
+    public function provideRemove(): array
     {
-        $tmpDir = $this->getPathToTestDir('тест');
-        $file = $this->getPathToTestFile($tmpDir . '/тест.txt');
+        $dirWithContent = $this->getPathToTestDir('dir_with_content');
+        $this->getPathToTestFile($dirWithContent . '/nested.txt');
+        $this->getPathToTestFile($dirWithContent . '/nested_folder/nested_second.txt');
 
-        $helper = new FileSystemHelperBase($tmpDir);
-        $helper->remove($file);
-
-        $this->assertFileDoesNotExist($file);
+        return [
+            'remove file out of restricted folder' => [
+                $this->getPathToTestFile('wrong_base_folder/file.txt'),
+                $this->getPathToTestDir('base_folder'),
+                new FileSystemException('All paths must be within base directory'),
+            ],
+            'remove file within base folder' => [
+                $this->getPathToTestFile('correct_base_folder/test.txt'),
+                $this->getPathToTestDir('correct_base_folder'),
+            ],
+            'remove file out of restricted folder by relative path' => [
+                $this->getPathToTestDir('relative_base_folder/nested') . '/../../',
+                $this->getPathToTestDir('relative_base_folder'),
+                new FileSystemException('All paths must be within base directory'),
+            ],
+            'remove file with utf symbols in the name' => [
+                $this->getPathToTestFile('тест/тест.txt'),
+                $this->getPathToTestDir('тест'),
+            ],
+            'remove file without base folder set' => [
+                $this->getPathToTestFile(),
+            ],
+            'remove file with backslashes in name' => [
+                $this->convertPathToString($this->getPathToTestFile('backslashes/test.txt'), '\\'),
+                $this->convertPathToString($this->getPathToTestDir('backslashes'), '\\'),
+            ],
+            'remove file object' => [
+                $this->convertPathToSpl($this->getPathToTestFile()),
+            ],
+            'remove dir' => [
+                $dirWithContent,
+            ],
+            'remove non existed entity' => [
+                '/test_file_not_exist.txt',
+                null,
+                new FileSystemException('Can\'t find entity'),
+            ],
+            'remove with empty string' => [
+                '',
+                null,
+                new FileSystemException('Can\'t create SplFileInfo'),
+            ],
+        ];
     }
 
     /**
-     * @throws Throwable
+     * @test
+     *
+     * @dataProvider provideRemoveIfExists
      */
-    public function testRemoveFileWithinBaseFolderWithBackSlashes(): void
+    public function testRemoveIfExists(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
-        $tmpDir = '   ' . str_replace(['\\', '/'], '\\', $this->getTempDir()) . ' ';
-        $file = $this->getPathToTestFile();
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase($tmpDir);
-        $helper->remove($file);
-
-        $this->assertFileDoesNotExist($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveFile(): void
-    {
-        $file = $this->getPathToTestFile();
-
-        $helper = new FileSystemHelperBase();
-        $helper->remove($file);
-
-        $this->assertFileDoesNotExist($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveFileSplObject(): void
-    {
-        $file = $this->getPathToTestFile();
-
-        $helper = new FileSystemHelperBase();
-        $helper->remove(new SplFileInfo($file));
-
-        $this->assertFileDoesNotExist($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveDir(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $nestedFile = $this->getPathToTestFile($dir . '/nested.txt');
-        $nestedDir = $this->getPathToTestDir($dir . '/nested');
-        $nestedFileSecondLevel = $this->getPathToTestDir($nestedDir . '/nested_second.txt');
-
-        $helper = new FileSystemHelperBase();
-        $helper->remove($dir);
-
-        $this->assertFileDoesNotExist($nestedFile);
-        $this->assertFileDoesNotExist($nestedFileSecondLevel);
-        $this->assertDirectoryDoesNotExist($nestedDir);
-        $this->assertDirectoryDoesNotExist($dir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveUnexistedException(): void
-    {
-        $file = '/test_file_not_exist.txt';
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->remove($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveEmptyStringException(): void
-    {
-        $file = '';
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->remove($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveIfExistsFile(): void
-    {
-        $file = $this->getPathToTestFile();
-
-        $helper = new FileSystemHelperBase();
-        $helper->removeIfExists($file);
-
-        $this->assertFileDoesNotExist($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveIfExistsFileSplObject(): void
-    {
-        $file = $this->getPathToTestFile();
-
-        $helper = new FileSystemHelperBase();
-        $helper->removeIfExists(new SplFileInfo($file));
-
-        $this->assertFileDoesNotExist($file);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveIfExistsDir(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $nestedFile = $this->getPathToTestFile($dir . '/nested.txt');
-        $nestedDir = $this->getPathToTestDir($dir . '/nested');
-        $nestedFileSecondLevel = $this->getPathToTestDir($nestedDir . '/nested_second.txt');
-
-        $helper = new FileSystemHelperBase();
-        $helper->removeIfExists($dir);
-
-        $this->assertFileDoesNotExist($nestedFile);
-        $this->assertFileDoesNotExist($nestedFileSecondLevel);
-        $this->assertDirectoryDoesNotExist($nestedDir);
-        $this->assertDirectoryDoesNotExist($dir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRemoveIfExustsUnexistedException(): void
-    {
-        $file = '/test_file_not_exist.txt';
-
-        $helper = new FileSystemHelperBase();
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
         $helper->removeIfExists($file);
 
-        $this->assertFileDoesNotExist($file);
+        if (!$exception) {
+            $this->assertFileDoesNotExist($this->convertPathToString($file));
+        }
     }
 
     /**
-     * @throws Throwable
+     * @return array<string, mixed[]>
      */
-    public function testCopyFile(): void
+    public function provideRemoveIfExists(): array
     {
-        $dir = $this->getPathToTestDir();
-        $from = $this->getPathToTestFile($dir . '/test.txt');
-        $to = $dir . '/test_copy.txt';
+        $tests = $this->provideRemove();
+        $tests['remove non existed entity'] = [
+            '/test_file_not_exist.txt',
+        ];
 
-        $helper = new FileSystemHelperBase();
+        return $tests;
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideCopyFile
+     */
+    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
+    {
+        $helper = new FileSystemHelperBase($baseDir);
+
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
+
         $helper->copy($from, $to);
 
-        $this->assertFileExists($to);
-        $this->assertFileEquals($from, $to);
+        if (!$exception) {
+            $from = $this->convertPathToString($from);
+            $to = $this->convertPathToString($to);
+            $this->assertFileExists($to);
+            $this->assertFileEquals($from, $to);
+        }
     }
 
     /**
-     * @throws Throwable
+     * @return array<string, mixed[]>
+     */
+    public function provideCopyFile(): array
+    {
+        $dir = $this->getPathToTestDir('copy');
+        $utfDir = $this->getPathToTestDir('копирование');
+
+        $dirOutsideBaseDir = $this->getPathToTestDir('outside_base_dir');
+        $this->getPathToTestDir($dirOutsideBaseDir . '/outside_base_dir.txt');
+
+        return [
+            'copy file' => [
+                $this->getPathToTestFile(),
+                $dir . '/copy_destination.txt',
+            ],
+            'copy file object' => [
+                $this->convertPathToSpl($this->getPathToTestFile()),
+                $this->convertPathToSpl($dir . '/copy_spl_destination.txt'),
+            ],
+            'copy unexisted file' => [
+                '/non_existed_file',
+                '/destination',
+                new FileSystemException('Can\'t find source'),
+            ],
+            'copy to existed file' => [
+                $this->getPathToTestFile(),
+                $this->getPathToTestFile(),
+                new FileSystemException('already exists'),
+            ],
+            'copy to existed dir' => [
+                $this->getPathToTestFile(),
+                $this->getPathToTestDir(),
+                new FileSystemException('already exists'),
+            ],
+            'copy entites with utf in names' => [
+                $this->getPathToTestFile($utfDir . '/тест.txt'),
+                $utfDir . '/тест_новый.txt',
+            ],
+            'copy file with backslashes in name' => [
+                $this->convertPathToString($this->getPathToTestFile(), '\\'),
+                $this->convertPathToString($dir . '/backslashes_destination.txt', '\\'),
+            ],
+            'copy to the path where parent is not a folder' => [
+                $this->getPathToTestFile(),
+                $this->getPathToTestFile() . '/file.txt',
+                new FileSystemException('is not a direcotry or doesn\'t exist'),
+            ],
+            'copy from outside base folder' => [
+                $this->getPathToTestFile('outside_base_dir/test.txt'),
+                $dir . '/outside_base_dir_destination.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir,
+            ],
+            'copy to outside base folder' => [
+                $this->getPathToTestFile($dir . '/test.txt'),
+                $this->getPathToTestDir() . '/outside_base_dir_destination.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir,
+            ],
+            'copy from outside base folder by relative path' => [
+                $dir . '/../outside_base_dir/outside_base_dir.txt',
+                $dir . '/outside_base_dir_destination.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir,
+            ],
+            'copy to outside base folder by relative path' => [
+                $this->getPathToTestFile($dir . '/outside_base_dir_destination.txt'),
+                $dir . '/../outside_base_dir/outside_base_dir.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir,
+            ],
+        ];
+    }
+
+    /**
+     * @test
      */
     public function testCopyDir(): void
     {
@@ -263,79 +268,30 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
+     *
+     * @dataProvider provideCopyFile
      */
-    public function testCopyUnexistedSourceException(): void
+    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $from = $this->getTempDir() . '/non_existed_file';
-        $to = $this->getTempDir() . '/destination';
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase();
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
-        $this->expectException(FileSystemException::class);
-        $helper->copy($from, $to);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testCopyExistedDirDestinationException(): void
-    {
-        $from = $this->getPathToTestDir();
-        $to = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->copy($from, $to);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testCopyExistedFileDestinationException(): void
-    {
-        $from = $this->getPathToTestFile();
-        $to = $this->getPathToTestFile();
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->copy($from, $to);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testCopyExistedParentDestinationException(): void
-    {
-        $from = $this->getPathToTestDir();
-        $to = '/test/destination/folder';
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->copy($from, $to);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testRenameFile(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $from = $this->getPathToTestFile($dir . '/test.txt');
-        $to = $dir . '/test_rename.txt';
-
-        $helper = new FileSystemHelperBase();
         $helper->rename($from, $to);
 
-        $this->assertFileExists($to);
-        $this->assertFileDoesnotExist($from);
+        if (!$exception) {
+            $from = $this->convertPathToString($from);
+            $to = $this->convertPathToString($to);
+            $this->assertFileExists($to);
+            $this->assertFileDoesnotExist($from);
+        }
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testRenameDir(): void
     {
@@ -360,153 +316,114 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
+     *
+     * @dataProvider provideMkdir
      */
-    public function testRenameUnexistedSourceException(): void
+    public function testMkdir(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $from = $this->getTempDir() . '/non_existed_file';
-        $to = $this->getTempDir() . '/destination';
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase();
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
-        $this->expectException(FileSystemException::class);
-        $helper->rename($from, $to);
+        if ($permissions === null) {
+            $helper->mkdir($name);
+        } else {
+            $helper->mkdir($name, $permissions);
+        }
+
+        if (!$exception) {
+            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
+        }
     }
 
     /**
-     * @throws Throwable
+     * @return array<string, mixed[]>
      */
-    public function testRenameExistedDestinationException(): void
+    public function provideMkdir(): array
     {
-        $from = $this->getPathToTestDir();
-        $to = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->rename($from, $to);
+        return [
+            'make dir' => [
+                $this->getPathToTestDir() . '/dir_1',
+                0775,
+            ],
+            'make dir with default permissions' => [
+                $this->getPathToTestDir() . '/dir_2',
+            ],
+            'make nested dir' => [
+                $this->getPathToTestDir() . '/one_1/two_1/three_1',
+                0775,
+            ],
+            'make nested dir with default permissions' => [
+                $this->getPathToTestDir() . '/one_2/two_2/three_2',
+            ],
+            'dir already exists' => [
+                $this->getPathToTestDir(),
+                null,
+                new FileSystemException('already exists'),
+            ],
+            'make dir outside base dir' => [
+                $this->getPathToTestDir() . '/outside',
+                null,
+                new FileSystemException('All paths must be within base directory'),
+                $this->getPathToTestDir(),
+            ],
+            'make dir outside base dir by relative path' => [
+                $this->getPathToTestDir() . '/../../outside',
+                null,
+                new FileSystemException('All paths must be within base directory'),
+                $this->getPathToTestDir(),
+            ],
+            'make dir with utf symbols' => [
+                $this->getPathToTestDir() . '/тест',
+            ],
+        ];
     }
 
     /**
-     * @throws Throwable
+     * @test
+     *
+     * @dataProvider provideMkdirIfNotExist
      */
-    public function testRenameUnexistedParentDestination(): void
+    public function testMkdirIfNotExist(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $dir = $this->getPathToTestDir();
-        $from = $this->getPathToTestFile($dir . '/test.txt');
-        $to = $dir . '/unexisted_folder/test_rename.txt';
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase();
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
-        $this->expectException(FileSystemException::class);
-        $helper->rename($from, $to);
+        if ($permissions === null) {
+            $helper->mkdirIfNotExist($name);
+        } else {
+            $helper->mkdirIfNotExist($name, $permissions);
+        }
+
+        if (!$exception) {
+            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
+        }
     }
 
     /**
-     * @throws Throwable
+     * @return array<string, mixed[]>
      */
-    public function testMkdir(): void
+    public function provideMkdirIfNotExist(): array
     {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/test_dir';
-        $permissions = 0775;
+        $tests = $this->provideMkdir();
+        $tests['dir already exists'] = [
+            $this->getPathToTestDir(),
+            0755,
+        ];
 
-        $helper = new FileSystemHelperBase();
-        $helper->mkdir($newDir, $permissions);
-
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions($permissions, $newDir);
+        return $tests;
     }
 
     /**
-     * @throws Throwable
-     */
-    public function testMkdirNested(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
-        $permissions = 0775;
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdir($newDir, $permissions);
-
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions($permissions, $newDir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testMkdirDefaultPermissions(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdir($newDir);
-
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions(0777, $newDir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testMkdirAlreadyExistException(): void
-    {
-        $dir = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $this->expectExceptionMessage("Entity '{$dir}' already exists");
-        $helper->mkdir($dir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testMkdirIfNotExist(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdirIfNotExist($newDir);
-
-        $this->assertDirectoryExists($newDir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testMkdirIfNotExistDefaultPermissions(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdirIfNotExist($newDir);
-
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions(0777, $newDir);
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function testMkdirIfNotExistExisted(): void
-    {
-        $dir = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdirIfNotExist($dir);
-
-        $this->assertDirectoryExists($dir);
-    }
-
-    /**
-     * @throws Throwable
+     * @test
      */
     public function testEmptyDir(): void
     {
@@ -525,7 +442,7 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testEmptyDirUnexistedException(): void
     {
@@ -539,7 +456,7 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testEmptyDirFileException(): void
     {
@@ -553,18 +470,18 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testGetTmpDir(): void
     {
         $helper = new FileSystemHelperBase();
         $tmpDir = $helper->getTmpDir();
 
-        $this->assertInstanceOf(SplFileInfo::class, $tmpDir);
+        $this->assertInstanceOf(\SplFileInfo::class, $tmpDir);
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testIterateNonDirectoryException(): void
     {
@@ -580,7 +497,7 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testMakeFileInfoString(): void
     {
@@ -589,26 +506,26 @@ class FileSystemHelperBaseTest extends BaseCase
         $helper = new FileSystemHelperBase();
         $fileInfo = $helper->makeFileInfo($file);
 
-        $this->assertInstanceOf(SplFileInfo::class, $fileInfo);
+        $this->assertInstanceOf(\SplFileInfo::class, $fileInfo);
         $this->assertSame($file, $fileInfo->getPathname());
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testMakeFileInfoObject(): void
     {
-        $file = new SplFileInfo($this->getPathToTestFile());
+        $file = new \SplFileInfo($this->getPathToTestFile());
 
         $helper = new FileSystemHelperBase();
         $fileInfo = $helper->makeFileInfo($file);
 
-        $this->assertInstanceOf(SplFileInfo::class, $fileInfo);
+        $this->assertInstanceOf(\SplFileInfo::class, $fileInfo);
         $this->assertSame($file->getPathname(), $fileInfo->getPathname());
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testMakeFileInfoEmptyString(): void
     {
@@ -619,7 +536,7 @@ class FileSystemHelperBaseTest extends BaseCase
     }
 
     /**
-     * @throws Throwable
+     * @test
      */
     public function testMakeFileInfoWrongInput(): void
     {

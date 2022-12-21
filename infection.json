@@ -27,6 +27,11 @@
             "ignore": [
                 "Marvin255\\FileSystemHelper\\FileSystemHelperBase::mkdir"
             ]
+        },
+        "ArrayItemRemoval": {
+            "ignore": [
+                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::unifyPath"
+            ]
         }
     }
 }
