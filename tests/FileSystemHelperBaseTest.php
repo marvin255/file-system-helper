@@ -205,13 +205,13 @@ class FileSystemHelperBaseTest extends BaseCase
                 $this->getPathToTestFile('outside_base_dir/test.txt'),
                 $dir . '/outside_base_dir_destination.txt',
                 new FileSystemException('All paths must be within base directory'),
-                $dir
+                $dir,
             ],
             'copy to outside base folder' => [
                 $this->getPathToTestFile($dir . '/test.txt'),
                 $this->getPathToTestDir() . '/outside_base_dir_destination.txt',
                 new FileSystemException('All paths must be within base directory'),
-                $dir
+                $dir,
             ],
         ];
     }
@@ -242,18 +242,25 @@ class FileSystemHelperBaseTest extends BaseCase
 
     /**
      * @test
+     *
+     * @dataProvider provideCopyFile
      */
-    public function testRenameFile(): void
+    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $dir = $this->getPathToTestDir();
-        $from = $this->getPathToTestFile($dir . '/test.txt');
-        $to = $dir . '/test_rename.txt';
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase();
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
+
         $helper->rename($from, $to);
 
-        $this->assertFileExists($to);
-        $this->assertFileDoesnotExist($from);
+        if (!$exception) {
+            $from = $this->convertPathToString($from);
+            $to = $this->convertPathToString($to);
+            $this->assertFileExists($to);
+            $this->assertFileDoesnotExist($from);
+        }
     }
 
     /**
@@ -279,49 +286,6 @@ class FileSystemHelperBaseTest extends BaseCase
         $this->assertFileDoesnotExist($nestedFile);
         $this->assertFileExists($destinationNestedFileSecondLevel);
         $this->assertFileDoesnotExist($nestedFileSecondLevel);
-    }
-
-    /**
-     * @test
-     */
-    public function testRenameUnexistedSourceException(): void
-    {
-        $from = $this->getTempDir() . '/non_existed_file';
-        $to = $this->getTempDir() . '/destination';
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->rename($from, $to);
-    }
-
-    /**
-     * @test
-     */
-    public function testRenameExistedDestinationException(): void
-    {
-        $from = $this->getPathToTestDir();
-        $to = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->rename($from, $to);
-    }
-
-    /**
-     * @test
-     */
-    public function testRenameUnexistedParentDestination(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $from = $this->getPathToTestFile($dir . '/test.txt');
-        $to = $dir . '/unexisted_folder/test_rename.txt';
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $helper->rename($from, $to);
     }
 
     /**

@@ -164,7 +164,7 @@ final class FileSystemHelperBase implements FileSystemHelper
 
         if (!$parent->isDir()) {
             throw $this->createException(
-                "Target directory '%s' for renaming doesn't exist",
+                "Target directory '%s' for copying is not a direcotry or doesn't exist",
                 $parent
             );
         }
