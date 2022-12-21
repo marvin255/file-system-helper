@@ -163,6 +163,9 @@ class FileSystemHelperBaseTest extends BaseCase
         }
     }
 
+    /**
+     * @return array<string, mixed[]>
+     */
     public function provideCopyFile(): array
     {
         $dir = $this->getPathToTestDir('copy');
@@ -312,89 +315,85 @@ class FileSystemHelperBaseTest extends BaseCase
         }
 
         if (!$exception) {
-            $this->assertDirectoryExists($name);
-            if ($permissions !== null) {
-                $this->assertDirectoryHasPermissions($permissions, $name);
-            }
+            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
         }
     }
 
+    /**
+     * @return array<string, mixed[]>
+     */
     public function provideMkdir(): array
     {
-        $dir = $this->getPathToTestDir('mkdir');
-        
         return [
             'make dir' => [
-                $dir . '/one_level',
-                0775
+                $this->getPathToTestDir() . '/dir_1',
+                0775,
+            ],
+            'make dir with default permissions' => [
+                $this->getPathToTestDir() . '/dir_2',
             ],
             'make nested dir' => [
-                $dir . '/one_level/two_level/three_level',
-                0775
+                $this->getPathToTestDir() . '/one_1/two_1/three_1',
+                0775,
+            ],
+            'make nested dir with default permissions' => [
+                $this->getPathToTestDir() . '/one_2/two_2/three_2',
             ],
             'dir already exists' => [
-                $dir,
+                $this->getPathToTestDir(),
                 null,
                 new FileSystemException('already exists'),
+            ],
+            'make dir outside base dir' => [
+                $this->getPathToTestDir() . '/outside',
+                null,
+                new FileSystemException('All paths must be within base directory'),
+                $this->getPathToTestDir(),
+            ],
+            'make dir with utf symbols' => [
+                $this->getPathToTestDir() . '/тест',
             ],
         ];
     }
 
     /**
      * @test
+     *
+     * @dataProvider provideMkdirIfNotExist
      */
-    public function testMkdirDefaultPermissions(): void
+    public function testMkdirIfNotExist(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase();
-        $helper->mkdir($newDir);
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions(0777, $newDir);
+        if ($permissions === null) {
+            $helper->mkdirIfNotExist($name);
+        } else {
+            $helper->mkdirIfNotExist($name, $permissions);
+        }
+
+        if (!$exception) {
+            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
+        }
     }
 
     /**
-     * @test
+     * @return array<string, mixed[]>
      */
-    public function testMkdirIfNotExist(): void
+    public function provideMkdirIfNotExist(): array
     {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
+        $tests = $this->provideMkdir();
+        $tests['dir already exists'] = [
+            $this->getPathToTestDir(),
+            0755,
+        ];
 
-        $helper = new FileSystemHelperBase();
-        $helper->mkdirIfNotExist($newDir);
-
-        $this->assertDirectoryExists($newDir);
-    }
-
-    /**
-     * @test
-     */
-    public function testMkdirIfNotExistDefaultPermissions(): void
-    {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdirIfNotExist($newDir);
-
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions(0777, $newDir);
-    }
-
-    /**
-     * @test
-     */
-    public function testMkdirIfNotExistExisted(): void
-    {
-        $dir = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdirIfNotExist($dir);
-
-        $this->assertDirectoryExists($dir);
+        return $tests;
     }
 
     /**
