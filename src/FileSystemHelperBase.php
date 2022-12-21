@@ -378,6 +378,26 @@ final class FileSystemHelperBase implements FileSystemHelper
      */
     private function unifyPath(string $path): string
     {
-        return str_replace(['\\', '/'], \DIRECTORY_SEPARATOR, trim($path));
+        $path = str_replace(['/', '\\'], \DIRECTORY_SEPARATOR, trim($path));
+
+        if ($path === '') {
+            return '';
+        }
+
+        $parts = array_filter(
+            explode(\DIRECTORY_SEPARATOR, $path),
+            fn (string $part): bool => $part !== ''
+        );
+
+        $absolutes = [];
+        foreach ($parts as $part) {
+            if ('..' === $part) {
+                array_pop($absolutes);
+            } elseif ('.' !== $part) {
+                $absolutes[] = $part;
+            }
+        }
+
+        return \DIRECTORY_SEPARATOR . implode(\DIRECTORY_SEPARATOR, $absolutes);
     }
 }

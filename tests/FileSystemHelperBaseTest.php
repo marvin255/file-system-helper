@@ -77,6 +77,11 @@ class FileSystemHelperBaseTest extends BaseCase
                 $this->getPathToTestFile('correct_base_folder/test.txt'),
                 $this->getPathToTestDir('correct_base_folder'),
             ],
+            'remove file out of restricted folder by relative path' => [
+                $this->getPathToTestDir('relative_base_folder/nested') . '/../../',
+                $this->getPathToTestDir('relative_base_folder'),
+                new FileSystemException('All paths must be within base directory'),
+            ],
             'remove file with utf symbols in the name' => [
                 $this->getPathToTestFile('тест/тест.txt'),
                 $this->getPathToTestDir('тест'),
@@ -171,6 +176,9 @@ class FileSystemHelperBaseTest extends BaseCase
         $dir = $this->getPathToTestDir('copy');
         $utfDir = $this->getPathToTestDir('копирование');
 
+        $dirOutsideBaseDir = $this->getPathToTestDir('outside_base_dir');
+        $this->getPathToTestDir($dirOutsideBaseDir . '/outside_base_dir.txt');
+
         return [
             'copy file' => [
                 $this->getPathToTestFile(),
@@ -217,6 +225,12 @@ class FileSystemHelperBaseTest extends BaseCase
             'copy to outside base folder' => [
                 $this->getPathToTestFile($dir . '/test.txt'),
                 $this->getPathToTestDir() . '/outside_base_dir_destination.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir,
+            ],
+            'copy from outside base folder by relative path' => [
+                $dir . '/../outside_base_dir/outside_base_dir.txt',
+                $dir . '/outside_base_dir_destination.txt',
                 new FileSystemException('All paths must be within base directory'),
                 $dir,
             ],
