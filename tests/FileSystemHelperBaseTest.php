@@ -234,6 +234,12 @@ class FileSystemHelperBaseTest extends BaseCase
                 new FileSystemException('All paths must be within base directory'),
                 $dir,
             ],
+            'copy to outside base folder by relative path' => [
+                $this->getPathToTestFile($dir . '/outside_base_dir_destination.txt'),
+                $dir . '/../outside_base_dir/outside_base_dir.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir,
+            ],
         ];
     }
 
@@ -361,6 +367,12 @@ class FileSystemHelperBaseTest extends BaseCase
             ],
             'make dir outside base dir' => [
                 $this->getPathToTestDir() . '/outside',
+                null,
+                new FileSystemException('All paths must be within base directory'),
+                $this->getPathToTestDir(),
+            ],
+            'make dir outside base dir by relative path' => [
+                $this->getPathToTestDir() . '/../../outside',
                 null,
                 new FileSystemException('All paths must be within base directory'),
                 $this->getPathToTestDir(),
