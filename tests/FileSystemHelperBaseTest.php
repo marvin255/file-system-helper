@@ -141,9 +141,9 @@ class FileSystemHelperBaseTest extends BaseCase
      *
      * @dataProvider provideCopyFile
      */
-    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null): void
+    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperBase($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -200,6 +200,18 @@ class FileSystemHelperBaseTest extends BaseCase
                 $this->getPathToTestFile(),
                 $this->getPathToTestFile() . '/file.txt',
                 new FileSystemException('is not a direcotry or doesn\'t exist'),
+            ],
+            'copy from outside base folder' => [
+                $this->getPathToTestFile('outside_base_dir/test.txt'),
+                $dir . '/outside_base_dir_destination.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir
+            ],
+            'copy to outside base folder' => [
+                $this->getPathToTestFile($dir . '/test.txt'),
+                $this->getPathToTestDir() . '/outside_base_dir_destination.txt',
+                new FileSystemException('All paths must be within base directory'),
+                $dir
             ],
         ];
     }
