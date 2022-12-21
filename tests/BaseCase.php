@@ -137,8 +137,9 @@ abstract class BaseCase extends TestCase
         return new \SplFileInfo($path);
     }
 
-    protected function assertDirectoryHasPermissions(int $awaitedPermissions, string $directory): void
+    protected function assertDirectoryHasPermissions(int $awaitedPermissions, \SplFileInfo|string $directory): void
     {
+        $directory = $this->convertPathToString($directory);
         $awaitedPermissions = sprintf('%o', $awaitedPermissions);
         $realPermissions = substr(sprintf('%o', fileperms($directory)), -3);
         $this->assertSame($awaitedPermissions, $realPermissions, 'Directory has correct permissions');

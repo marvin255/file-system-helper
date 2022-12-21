@@ -165,8 +165,8 @@ class FileSystemHelperBaseTest extends BaseCase
 
     public function provideCopyFile(): array
     {
-        $dir = $this->getPathToTestDir('dir');
-        $utfDir = $this->getPathToTestDir('тест');
+        $dir = $this->getPathToTestDir('copy');
+        $utfDir = $this->getPathToTestDir('копирование');
 
         return [
             'copy file' => [
@@ -294,34 +294,50 @@ class FileSystemHelperBaseTest extends BaseCase
 
     /**
      * @test
+     *
+     * @dataProvider provideMkdir
      */
-    public function testMkdir(): void
+    public function testMkdir(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/test_dir';
-        $permissions = 0775;
+        $helper = new FileSystemHelperBase($baseDir);
 
-        $helper = new FileSystemHelperBase();
-        $helper->mkdir($newDir, $permissions);
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
 
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions($permissions, $newDir);
+        if ($permissions === null) {
+            $helper->mkdir($name);
+        } else {
+            $helper->mkdir($name, $permissions);
+        }
+
+        if (!$exception) {
+            $this->assertDirectoryExists($name);
+            if ($permissions !== null) {
+                $this->assertDirectoryHasPermissions($permissions, $name);
+            }
+        }
     }
 
-    /**
-     * @test
-     */
-    public function testMkdirNested(): void
+    public function provideMkdir(): array
     {
-        $dir = $this->getPathToTestDir();
-        $newDir = $dir . '/nested1/nested2/nested3';
-        $permissions = 0775;
-
-        $helper = new FileSystemHelperBase();
-        $helper->mkdir($newDir, $permissions);
-
-        $this->assertDirectoryExists($newDir);
-        $this->assertDirectoryHasPermissions($permissions, $newDir);
+        $dir = $this->getPathToTestDir('mkdir');
+        
+        return [
+            'make dir' => [
+                $dir . '/one_level',
+                0775
+            ],
+            'make nested dir' => [
+                $dir . '/one_level/two_level/three_level',
+                0775
+            ],
+            'dir already exists' => [
+                $dir,
+                null,
+                new FileSystemException('already exists'),
+            ],
+        ];
     }
 
     /**
@@ -337,20 +353,6 @@ class FileSystemHelperBaseTest extends BaseCase
 
         $this->assertDirectoryExists($newDir);
         $this->assertDirectoryHasPermissions(0777, $newDir);
-    }
-
-    /**
-     * @test
-     */
-    public function testMkdirAlreadyExistException(): void
-    {
-        $dir = $this->getPathToTestDir();
-
-        $helper = new FileSystemHelperBase();
-
-        $this->expectException(FileSystemException::class);
-        $this->expectExceptionMessage("Entity '{$dir}' already exists");
-        $helper->mkdir($dir);
     }
 
     /**
