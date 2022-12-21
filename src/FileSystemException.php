@@ -9,6 +9,6 @@ use Exception;
 /**
  * Exception class for errors in file helper.
  */
-class FileSystemException extends Exception
+class FileSystemException extends \Exception
 {
 }

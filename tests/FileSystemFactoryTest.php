@@ -6,7 +6,6 @@ namespace Marvin255\FileSystemHelper\Tests;
 
 use Marvin255\FileSystemHelper\FileSystemFactory;
 use Marvin255\FileSystemHelper\FileSystemHelper;
-use Throwable;
 
 /**
  * @internal
@@ -14,7 +13,7 @@ use Throwable;
 class FileSystemFactoryTest extends BaseCase
 {
     /**
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function testCreate(): void
     {

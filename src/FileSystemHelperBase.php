@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
-use Closure;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use SplFileInfo;
 
 /**
@@ -21,7 +18,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         $validatedBaseFolder = null;
 
         if ($baseFolder !== null) {
-            $validatedBaseFolder = str_replace(['\\', '/'], \DIRECTORY_SEPARATOR, trim($baseFolder));
+            $validatedBaseFolder = $this->unifyPath($baseFolder);
             if ($validatedBaseFolder === '') {
                 throw $this->createException(
                     "Base folder can't be empty. Set non empty string or null"
@@ -43,7 +40,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function remove(SplFileInfo|string $entity): void
+    public function remove(\SplFileInfo|string $entity): void
     {
         $splEntity = $this->makeFileInfoAndCheckBasePath($entity);
 
@@ -55,7 +52,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         } elseif ($splEntity->isDir()) {
             $this->iterateDirectory(
                 $splEntity,
-                fn (SplFileInfo $file): mixed => $this->remove($file)
+                fn (\SplFileInfo $file): mixed => $this->remove($file)
             );
             $this->runPhpFunction(
                 'rmdir',
@@ -72,7 +69,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function removeIfExists(SplFileInfo|string $entity): void
+    public function removeIfExists(\SplFileInfo|string $entity): void
     {
         $splEntity = $this->makeFileInfoAndCheckBasePath($entity);
 
@@ -84,7 +81,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function copy(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo
+    public function copy(\SplFileInfo|string $from, \SplFileInfo|string $to): \SplFileInfo
     {
         $source = $this->makeFileInfoAndCheckBasePath($from);
         $target = $this->makeFileInfoAndCheckBasePath($to);
@@ -108,7 +105,7 @@ final class FileSystemHelperBase implements FileSystemHelper
 
         if (!$parent->isDir()) {
             throw $this->createException(
-                "Target directory '%s' for copying doesn't exist",
+                "Target directory '%s' for copying is not a direcotry or doesn't exist",
                 $parent
             );
         }
@@ -130,9 +127,9 @@ final class FileSystemHelperBase implements FileSystemHelper
             $this->mkdir($target);
             $this->iterateDirectory(
                 $source,
-                function (SplFileInfo $file) use ($target): void {
+                function (\SplFileInfo $file) use ($target): void {
                     $nestedPath = $target->getPathname() . \DIRECTORY_SEPARATOR . $file->getBasename();
-                    $nestedTarget = new SplFileInfo($nestedPath);
+                    $nestedTarget = new \SplFileInfo($nestedPath);
                     $this->copy($file, $nestedTarget);
                 }
             );
@@ -144,7 +141,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function rename(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo
+    public function rename(\SplFileInfo|string $from, \SplFileInfo|string $to): \SplFileInfo
     {
         $source = $this->makeFileInfoAndCheckBasePath($from);
         $destination = $this->makeFileInfoAndCheckBasePath($to);
@@ -191,7 +188,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function mkdir(SplFileInfo|string $path, int $mode = 0777): SplFileInfo
+    public function mkdir(\SplFileInfo|string $path, int $mode = 0777): \SplFileInfo
     {
         $dir = $this->makeFileInfoAndCheckBasePath($path);
 
@@ -218,7 +215,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function mkdirIfNotExist(SplFileInfo|string $path, int $mode = 0777): SplFileInfo
+    public function mkdirIfNotExist(\SplFileInfo|string $path, int $mode = 0777): \SplFileInfo
     {
         $dir = $this->makeFileInfoAndCheckBasePath($path);
 
@@ -232,7 +229,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function emptyDir(SplFileInfo|string $path): void
+    public function emptyDir(\SplFileInfo|string $path): void
     {
         $dir = $this->makeFileInfoAndCheckBasePath($path);
 
@@ -250,14 +247,14 @@ final class FileSystemHelperBase implements FileSystemHelper
 
         $this->iterateDirectory(
             $dir,
-            fn (SplFileInfo $file): mixed => $this->remove($file)
+            fn (\SplFileInfo $file): mixed => $this->remove($file)
         );
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getTmpDir(): SplFileInfo
+    public function getTmpDir(): \SplFileInfo
     {
         $dir = sys_get_temp_dir();
 
@@ -273,7 +270,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function iterateDirectory(SplFileInfo|string $dir, Closure $callback): void
+    public function iterateDirectory(\SplFileInfo|string $dir, \Closure $callback): void
     {
         $splEntity = $this->makeFileInfoAndCheckBasePath($dir);
 
@@ -284,17 +281,17 @@ final class FileSystemHelperBase implements FileSystemHelper
             );
         }
 
-        $it = new RecursiveDirectoryIterator(
+        $it = new \RecursiveDirectoryIterator(
             $splEntity->getRealPath(),
-            RecursiveDirectoryIterator::SKIP_DOTS
+            \RecursiveDirectoryIterator::SKIP_DOTS
         );
 
-        $content = new RecursiveIteratorIterator(
+        $content = new \RecursiveIteratorIterator(
             $it,
-            RecursiveIteratorIterator::CHILD_FIRST
+            \RecursiveIteratorIterator::CHILD_FIRST
         );
 
-        /** @var SplFileInfo $file */
+        /** @var \SplFileInfo $file */
         foreach ($content as $file) {
             \call_user_func_array($callback, [$file]);
         }
@@ -303,15 +300,15 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function makeFileInfo(mixed $path): SplFileInfo
+    public function makeFileInfo(mixed $path): \SplFileInfo
     {
         if (\is_string($path)) {
-            $trimmedPath = trim($path);
+            $trimmedPath = $this->unifyPath($path);
             if ($trimmedPath === '') {
                 throw $this->createException("Can't create SplFileInfo using empty string");
             }
-            $fileInfo = new SplFileInfo($trimmedPath);
-        } elseif ($path instanceof SplFileInfo) {
+            $fileInfo = new \SplFileInfo($trimmedPath);
+        } elseif ($path instanceof \SplFileInfo) {
             $fileInfo = $path;
         } else {
             throw $this->createException("Can't create SplFileInfo from given object type");
@@ -323,13 +320,9 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * Creates SplFileInfo object from set data.
      *
-     * @param SplFileInfo|string $data
-     *
-     * @return SplFileInfo
-     *
      * @throws FileSystemException
      */
-    private function makeFileInfoAndCheckBasePath(SplFileInfo|string $data): SplFileInfo
+    private function makeFileInfoAndCheckBasePath(\SplFileInfo|string $data): \SplFileInfo
     {
         $data = $this->makeFileInfo($data);
 
@@ -365,8 +358,8 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * Creates FileSystemException.
      *
-     * @param string                         $message
-     * @param array<int, SplFileInfo|string> $params
+     * @param string                          $message
+     * @param array<int, \SplFileInfo|string> $params
      *
      * @return FileSystemException
      */
@@ -378,5 +371,13 @@ final class FileSystemHelperBase implements FileSystemHelper
         $compiledMessage = \call_user_func_array('sprintf', $params);
 
         return new FileSystemException($compiledMessage);
+    }
+
+    /**
+     * Converts set path string to internal format.
+     */
+    private function unifyPath(string $path): string
+    {
+        return str_replace(['\\', '/'], \DIRECTORY_SEPARATOR, trim($path));
     }
 }

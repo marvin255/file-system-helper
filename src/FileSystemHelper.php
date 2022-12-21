@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
-use Closure;
 use SplFileInfo;
 
 /**
@@ -15,101 +14,101 @@ interface FileSystemHelper
     /**
      * Removes set file or folder.
      *
-     * @param SplFileInfo|string $entity
+     * @param \SplFileInfo|string $entity
      *
      * @throws FileSystemException
      */
-    public function remove(SplFileInfo|string $entity): void;
+    public function remove(\SplFileInfo|string $entity): void;
 
     /**
      * Removes set entity on if it exists.
      *
-     * @param SplFileInfo|string $entity
+     * @param \SplFileInfo|string $entity
      *
      * @throws FileSystemException
      */
-    public function removeIfExists(SplFileInfo|string $entity): void;
+    public function removeIfExists(\SplFileInfo|string $entity): void;
 
     /**
      * Copies set file or folder.
      *
-     * @param SplFileInfo|string $from
-     * @param SplFileInfo|string $to
+     * @param \SplFileInfo|string $from
+     * @param \SplFileInfo|string $to
      *
      * @throws FileSystemException
      */
-    public function copy(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo;
+    public function copy(\SplFileInfo|string $from, \SplFileInfo|string $to): \SplFileInfo;
 
     /**
      * Renames file system entity.
      *
-     * @param SplFileInfo|string $from
-     * @param SplFileInfo|string $to
+     * @param \SplFileInfo|string $from
+     * @param \SplFileInfo|string $to
      *
      * @throws FileSystemException
      */
-    public function rename(SplFileInfo|string $from, SplFileInfo|string $to): SplFileInfo;
+    public function rename(\SplFileInfo|string $from, \SplFileInfo|string $to): \SplFileInfo;
 
     /**
      * Creates new folder by path.
      *
-     * @param SplFileInfo|string $path
-     * @param int                $mode
+     * @param \SplFileInfo|string $path
+     * @param int                 $mode
      *
-     * @return SplFileInfo
+     * @return \SplFileInfo
      *
      * @throws FileSystemException
      */
-    public function mkdir(SplFileInfo|string $path, int $mode = 0777): SplFileInfo;
+    public function mkdir(\SplFileInfo|string $path, int $mode = 0777): \SplFileInfo;
 
     /**
      * Creates new folder by path if it does not exist.
      *
-     * @param SplFileInfo|string $path
-     * @param int                $mode
+     * @param \SplFileInfo|string $path
+     * @param int                 $mode
      *
-     * @return SplFileInfo
+     * @return \SplFileInfo
      *
      * @throws FileSystemException
      */
-    public function mkdirIfNotExist(SplFileInfo|string $path, int $mode = 0777): SplFileInfo;
+    public function mkdirIfNotExist(\SplFileInfo|string $path, int $mode = 0777): \SplFileInfo;
 
     /**
      * Removes all content form directory but keep itself.
      *
-     * @param SplFileInfo|string $path
+     * @param \SplFileInfo|string $path
      *
      * @throws FileSystemException
      */
-    public function emptyDir(SplFileInfo|string $path): void;
+    public function emptyDir(\SplFileInfo|string $path): void;
 
     /**
      * Returns SplFileInfo with info for tmp folder.
      *
-     * @return SplFileInfo
+     * @return \SplFileInfo
      *
      * @throws FileSystemException
      */
-    public function getTmpDir(): SplFileInfo;
+    public function getTmpDir(): \SplFileInfo;
 
     /**
      * Iterates over directory children using callback.
      *
-     * @param SplFileInfo|string $dir
-     * @param Closure            $callback
+     * @param \SplFileInfo|string $dir
+     * @param \Closure            $callback
      *
      * @throws FileSystemException
      */
-    public function iterateDirectory(SplFileInfo|string $dir, Closure $callback): void;
+    public function iterateDirectory(\SplFileInfo|string $dir, \Closure $callback): void;
 
     /**
      * Tries to create SplFileInfo object from the given path.
      *
      * @param mixed $path
      *
-     * @return SplFileInfo
+     * @return \SplFileInfo
      *
      * @throws FileSystemException
      */
-    public function makeFileInfo(mixed $path): SplFileInfo;
+    public function makeFileInfo(mixed $path): \SplFileInfo;
 }
