@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
-use SplFileInfo;
-
 /**
  * Object to manipulate files and folders.
+ *
+ * @internal
  */
 final class FileSystemHelperBase implements FileSystemHelper
 {

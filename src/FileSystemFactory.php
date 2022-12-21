@@ -7,8 +7,12 @@ namespace Marvin255\FileSystemHelper;
 /**
  * Factory object for file system helper.
  */
-class FileSystemFactory
+final class FileSystemFactory
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Creates new FileSystemHelperInterface instance with default settings.
      *

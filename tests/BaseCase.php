@@ -98,6 +98,9 @@ abstract class BaseCase extends TestCase
         return $pathToFile;
     }
 
+    /**
+     * Removes set dir with all content.
+     */
     protected function removeDir(string $folderPath): void
     {
         if (is_dir($folderPath)) {
@@ -121,6 +124,9 @@ abstract class BaseCase extends TestCase
         }
     }
 
+    /**
+     * Converts SplFileInfo to string and change delimeters to the set one.
+     */
     protected function convertPathToString(\SplFileInfo|string $path, string $delimeter = \DIRECTORY_SEPARATOR): string
     {
         $pathStr = $path instanceof \SplFileInfo ? $path->getPathname() : $path;
@@ -128,6 +134,9 @@ abstract class BaseCase extends TestCase
         return str_replace(['\\', '/'], $delimeter, trim($pathStr));
     }
 
+    /**
+     * Converts string to SplFileInfo.
+     */
     protected function convertPathToSpl(\SplFileInfo|string $path): \SplFileInfo
     {
         if ($path instanceof \SplFileInfo) {
@@ -137,6 +146,9 @@ abstract class BaseCase extends TestCase
         return new \SplFileInfo($path);
     }
 
+    /**
+     * Assertion that checks that directory has set permissions.
+     */
     protected function assertDirectoryHasPermissions(int $awaitedPermissions, \SplFileInfo|string $directory): void
     {
         $directory = $this->convertPathToString($directory);
