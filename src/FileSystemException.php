@@ -7,6 +7,6 @@ namespace Marvin255\FileSystemHelper;
 /**
  * Exception class for errors in file helper.
  */
-class FileSystemException extends \Exception
+final class FileSystemException extends \Exception
 {
 }
