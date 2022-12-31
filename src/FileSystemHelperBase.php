@@ -23,7 +23,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         if ($baseFolder !== null) {
             $validatedBaseFolder = PathHelper::realpath($baseFolder);
             if ($validatedBaseFolder === null) {
-                throw $this->createException(
+                throw FileSystemException::create(
                     "Base folder '%s' doesn't exist",
                     $baseFolder
                 );
@@ -55,7 +55,7 @@ final class FileSystemHelperBase implements FileSystemHelper
                 $splEntity->getRealPath()
             );
         } else {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Can't find entity '%s' to remove",
                 $splEntity
             );
@@ -83,14 +83,14 @@ final class FileSystemHelperBase implements FileSystemHelper
         $target = $this->makeFileInfoAndCheckBasePath($to);
 
         if (!$source->isDir() && !$source->isFile()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Can't find source '%s' to copy",
                 $from
             );
         }
 
         if ($target->isFile() || $target->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target path '%s' for copy '%s' already exists",
                 $source,
                 $target
@@ -100,14 +100,14 @@ final class FileSystemHelperBase implements FileSystemHelper
         $parent = $this->makeFileInfoAndCheckBasePath($target->getPath());
 
         if (!$parent->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target directory '%s' for copying is not a direcotry or doesn't exist",
                 $parent
             );
         }
 
         if (!$parent->isWritable()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target directory '%s' for copying isn't writable",
                 $parent
             );
@@ -143,14 +143,14 @@ final class FileSystemHelperBase implements FileSystemHelper
         $destination = $this->makeFileInfoAndCheckBasePath($to);
 
         if (!$source->isFile() && !$source->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Can't find source entity '%s' to rename",
                 $source
             );
         }
 
         if ($destination->isFile() || $destination->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target entity '%s' to rename already exists",
                 $destination
             );
@@ -159,14 +159,14 @@ final class FileSystemHelperBase implements FileSystemHelper
         $parent = $this->makeFileInfoAndCheckBasePath($destination->getPath());
 
         if (!$parent->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target directory '%s' for copying is not a direcotry or doesn't exist",
                 $parent
             );
         }
 
         if (!$parent->isWritable()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target directory '%s' for renaming isn't writable",
                 $parent
             );
@@ -189,7 +189,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         $dir = $this->makeFileInfoAndCheckBasePath($path);
 
         if ($dir->isFile() || $dir->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Entity '%s' already exists",
                 $dir
             );
@@ -230,12 +230,12 @@ final class FileSystemHelperBase implements FileSystemHelper
         $dir = $this->makeFileInfoAndCheckBasePath($path);
 
         if ($dir->isFile()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Can't empty directory '%s' because it's a file",
                 $dir
             );
         } elseif (!$dir->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Directory '%s' must exist to be emptied",
                 $dir
             );
@@ -255,7 +255,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         $dir = sys_get_temp_dir();
 
         if (empty($dir) || !is_dir($dir)) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Can't find system temporary directory"
             );
         }
@@ -271,7 +271,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         $splEntity = $this->makeFileInfoAndCheckBasePath($dir);
 
         if (!$splEntity->isDir()) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Target '%s' doesn't exist or not a directory",
                 $splEntity
             );
@@ -301,13 +301,13 @@ final class FileSystemHelperBase implements FileSystemHelper
         if (\is_string($path)) {
             $trimmedPath = PathHelper::unifyPath($path);
             if ($trimmedPath === '') {
-                throw $this->createException("Can't create SplFileInfo using empty string");
+                throw FileSystemException::create("Can't create SplFileInfo using empty string");
             }
             $fileInfo = new \SplFileInfo($trimmedPath);
         } elseif ($path instanceof \SplFileInfo) {
             $fileInfo = $path;
         } else {
-            throw $this->createException("Can't create SplFileInfo from given object type");
+            throw FileSystemException::create("Can't create SplFileInfo from given object type");
         }
 
         return $fileInfo;
@@ -323,7 +323,7 @@ final class FileSystemHelperBase implements FileSystemHelper
         $data = $this->makeFileInfo($data);
 
         if ($this->baseFolder !== null && !PathHelper::isPathParentForPath($this->baseFolder, $data->getPathName())) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Not allowed path '%s'. All paths must be within base directory '%s'",
                 $data,
                 $this->baseFolder
@@ -344,28 +344,10 @@ final class FileSystemHelperBase implements FileSystemHelper
     private function runPhpFunction(string $functionName, ...$params): void
     {
         if (\call_user_func_array($functionName, $params) === false) {
-            throw $this->createException(
+            throw FileSystemException::create(
                 "Got false result from '%s' function",
                 $functionName
             );
         }
-    }
-
-    /**
-     * Creates FileSystemException.
-     *
-     * @param string                          $message
-     * @param array<int, \SplFileInfo|string> $params
-     *
-     * @return FileSystemException
-     */
-    private function createException(string $message, ...$params): FileSystemException
-    {
-        array_unshift($params, $message);
-
-        /** @var string */
-        $compiledMessage = \call_user_func_array('sprintf', $params);
-
-        return new FileSystemException($compiledMessage);
     }
 }
