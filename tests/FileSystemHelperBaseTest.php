@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper\Tests;
 
-use Marvin255\FileSystemHelper\FileSystemException;
+use Marvin255\FileSystemHelper\Exception\FileSystemException;
 use Marvin255\FileSystemHelper\FileSystemHelperBase;
 
 /**

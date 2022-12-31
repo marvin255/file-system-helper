@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
+use Marvin255\FileSystemHelper\Exception\FileSystemException;
 use Marvin255\FileSystemHelper\Helper\PathHelper;
 
 /**
