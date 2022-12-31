@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
+use Marvin255\FileSystemHelper\Helper\PathHelper;
+
 /**
  * Object to manipulate files and folders.
  *
@@ -18,15 +20,8 @@ final class FileSystemHelperBase implements FileSystemHelper
         $validatedBaseFolder = null;
 
         if ($baseFolder !== null) {
-            $validatedBaseFolder = $this->unifyPath($baseFolder);
-            if ($validatedBaseFolder === '') {
-                throw $this->createException(
-                    "Base folder can't be empty. Set non empty string or null"
-                );
-            }
-
-            $validatedBaseFolder = realpath($validatedBaseFolder);
-            if ($validatedBaseFolder === false) {
+            $validatedBaseFolder = PathHelper::realpath($baseFolder);
+            if ($validatedBaseFolder === null) {
                 throw $this->createException(
                     "Base folder '%s' doesn't exist",
                     $baseFolder
@@ -303,7 +298,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     public function makeFileInfo(mixed $path): \SplFileInfo
     {
         if (\is_string($path)) {
-            $trimmedPath = $this->unifyPath($path);
+            $trimmedPath = PathHelper::unifyPath($path);
             if ($trimmedPath === '') {
                 throw $this->createException("Can't create SplFileInfo using empty string");
             }
@@ -326,7 +321,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     {
         $data = $this->makeFileInfo($data);
 
-        if ($this->baseFolder !== null && strpos($data->getPathName(), $this->baseFolder) !== 0) {
+        if ($this->baseFolder !== null && !PathHelper::isPathParentForPath($this->baseFolder, $data->getPathName())) {
             throw $this->createException(
                 "Not allowed path '%s'. All paths must be within base directory '%s'",
                 $data,
@@ -371,33 +366,5 @@ final class FileSystemHelperBase implements FileSystemHelper
         $compiledMessage = \call_user_func_array('sprintf', $params);
 
         return new FileSystemException($compiledMessage);
-    }
-
-    /**
-     * Converts set path string to internal format.
-     */
-    private function unifyPath(string $path): string
-    {
-        $path = str_replace(['/', '\\'], \DIRECTORY_SEPARATOR, trim($path));
-
-        if ($path === '') {
-            return '';
-        }
-
-        $parts = array_filter(
-            explode(\DIRECTORY_SEPARATOR, $path),
-            fn (string $part): bool => $part !== ''
-        );
-
-        $absolutes = [];
-        foreach ($parts as $part) {
-            if ('..' === $part) {
-                array_pop($absolutes);
-            } elseif ('.' !== $part) {
-                $absolutes[] = $part;
-            }
-        }
-
-        return \DIRECTORY_SEPARATOR . implode(\DIRECTORY_SEPARATOR, $absolutes);
     }
 }

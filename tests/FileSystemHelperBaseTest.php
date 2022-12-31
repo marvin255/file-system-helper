@@ -15,18 +15,6 @@ class FileSystemHelperBaseTest extends BaseCase
     /**
      * @test
      */
-    public function testEmptyBasePathInConstructException(): void
-    {
-        $this->expectExceptionObject(
-            new FileSystemException("Base folder can't be empty. Set non empty string or null")
-        );
-
-        new FileSystemHelperBase('');
-    }
-
-    /**
-     * @test
-     */
     public function testEmptyBasePathUnexistedInConstructException(): void
     {
         $path = '/test-path-123';
