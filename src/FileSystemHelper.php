@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper;
 
+use Marvin255\FileSystemHelper\Exception\FileSystemException;
+
 /**
  * Interface for object that contains methods to work with file system.
  */

@@ -30,7 +30,7 @@
         },
         "ArrayItemRemoval": {
             "ignore": [
-                "Marvin255\\FileSystemHelper\\FileSystemHelperBase::unifyPath"
+                "Marvin255\\FileSystemHelper\\Helper\\PathHelper::fixDirectorySeparatorAndTrim"
             ]
         }
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Marvin255\FileSystemHelper\Tests;
 
-use Marvin255\FileSystemHelper\FileSystemException;
+use Marvin255\FileSystemHelper\Exception\FileSystemException;
 use Marvin255\FileSystemHelper\FileSystemHelperBase;
 
 /**
@@ -15,24 +15,12 @@ class FileSystemHelperBaseTest extends BaseCase
     /**
      * @test
      */
-    public function testEmptyBasePathInConstructException(): void
-    {
-        $this->expectExceptionObject(
-            new FileSystemException("Base folder can't be empty. Set non empty string or null")
-        );
-
-        new FileSystemHelperBase('');
-    }
-
-    /**
-     * @test
-     */
     public function testEmptyBasePathUnexistedInConstructException(): void
     {
         $path = '/test-path-123';
 
         $this->expectExceptionObject(
-            new FileSystemException("Base folder '{$path}' doesn't exist")
+            FileSystemException::create("Base folder '{$path}' doesn't exist")
         );
 
         new FileSystemHelperBase($path);
@@ -71,7 +59,7 @@ class FileSystemHelperBaseTest extends BaseCase
             'remove file out of restricted folder' => [
                 $this->getPathToTestFile('wrong_base_folder/file.txt'),
                 $this->getPathToTestDir('base_folder'),
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
             ],
             'remove file within base folder' => [
                 $this->getPathToTestFile('correct_base_folder/test.txt'),
@@ -80,7 +68,7 @@ class FileSystemHelperBaseTest extends BaseCase
             'remove file out of restricted folder by relative path' => [
                 $this->getPathToTestDir('relative_base_folder/nested') . '/../../',
                 $this->getPathToTestDir('relative_base_folder'),
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
             ],
             'remove file with utf symbols in the name' => [
                 $this->getPathToTestFile('тест/тест.txt'),
@@ -102,12 +90,12 @@ class FileSystemHelperBaseTest extends BaseCase
             'remove non existed entity' => [
                 '/test_file_not_exist.txt',
                 null,
-                new FileSystemException('Can\'t find entity'),
+                FileSystemException::create('Can\'t find entity'),
             ],
             'remove with empty string' => [
                 '',
                 null,
-                new FileSystemException('Can\'t create SplFileInfo'),
+                FileSystemException::create('Can\'t create SplFileInfo'),
             ],
         ];
     }
@@ -191,17 +179,17 @@ class FileSystemHelperBaseTest extends BaseCase
             'copy unexisted file' => [
                 '/non_existed_file',
                 '/destination',
-                new FileSystemException('Can\'t find source'),
+                FileSystemException::create('Can\'t find source'),
             ],
             'copy to existed file' => [
                 $this->getPathToTestFile(),
                 $this->getPathToTestFile(),
-                new FileSystemException('already exists'),
+                FileSystemException::create('already exists'),
             ],
             'copy to existed dir' => [
                 $this->getPathToTestFile(),
                 $this->getPathToTestDir(),
-                new FileSystemException('already exists'),
+                FileSystemException::create('already exists'),
             ],
             'copy entites with utf in names' => [
                 $this->getPathToTestFile($utfDir . '/тест.txt'),
@@ -214,30 +202,30 @@ class FileSystemHelperBaseTest extends BaseCase
             'copy to the path where parent is not a folder' => [
                 $this->getPathToTestFile(),
                 $this->getPathToTestFile() . '/file.txt',
-                new FileSystemException('is not a direcotry or doesn\'t exist'),
+                FileSystemException::create('is not a direcotry or doesn\'t exist'),
             ],
             'copy from outside base folder' => [
                 $this->getPathToTestFile('outside_base_dir/test.txt'),
                 $dir . '/outside_base_dir_destination.txt',
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
                 $dir,
             ],
             'copy to outside base folder' => [
                 $this->getPathToTestFile($dir . '/test.txt'),
                 $this->getPathToTestDir() . '/outside_base_dir_destination.txt',
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
                 $dir,
             ],
             'copy from outside base folder by relative path' => [
                 $dir . '/../outside_base_dir/outside_base_dir.txt',
                 $dir . '/outside_base_dir_destination.txt',
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
                 $dir,
             ],
             'copy to outside base folder by relative path' => [
                 $this->getPathToTestFile($dir . '/outside_base_dir_destination.txt'),
                 $dir . '/../outside_base_dir/outside_base_dir.txt',
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
                 $dir,
             ],
         ];
@@ -363,18 +351,18 @@ class FileSystemHelperBaseTest extends BaseCase
             'dir already exists' => [
                 $this->getPathToTestDir(),
                 null,
-                new FileSystemException('already exists'),
+                FileSystemException::create('already exists'),
             ],
             'make dir outside base dir' => [
                 $this->getPathToTestDir() . '/outside',
                 null,
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
                 $this->getPathToTestDir(),
             ],
             'make dir outside base dir by relative path' => [
                 $this->getPathToTestDir() . '/../../outside',
                 null,
-                new FileSystemException('All paths must be within base directory'),
+                FileSystemException::create('All paths must be within base directory'),
                 $this->getPathToTestDir(),
             ],
             'make dir with utf symbols' => [
