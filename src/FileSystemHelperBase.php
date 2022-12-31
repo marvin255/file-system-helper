@@ -124,7 +124,7 @@ final class FileSystemHelperBase implements FileSystemHelper
             $this->iterateDirectory(
                 $source,
                 function (\SplFileInfo $file) use ($target): void {
-                    $nestedPath = $target->getPathname() . \DIRECTORY_SEPARATOR . $file->getBasename();
+                    $nestedPath = PathHelper::joinPaths($target->getPathname(), $file->getBasename());
                     $nestedTarget = new \SplFileInfo($nestedPath);
                     $this->copy($file, $nestedTarget);
                 }

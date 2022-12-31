@@ -145,4 +145,14 @@ class PathHelperTest extends BaseCase
             ],
         ];
     }
+
+    public function testJoinPaths(): void
+    {
+        $part1 = 'test1';
+        $part2 = 'test2';
+
+        $res = PathHelper::joinPaths($part1, $part2);
+
+        $this->assertSame($part1 . \DIRECTORY_SEPARATOR . $part2, $res);
+    }
 }

@@ -69,6 +69,16 @@ final class PathHelper
     }
 
     /**
+     * Joins multiple paths to a single one.
+     *
+     * @param string[] $paths
+     */
+    public static function joinPaths(...$paths): string
+    {
+        return implode(\DIRECTORY_SEPARATOR, $paths);
+    }
+
+    /**
      * Converts all directory separators to current system separator.
      */
     private static function fixDirectorySeparatorAndTrim(string $path): string
