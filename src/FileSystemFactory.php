@@ -22,6 +22,6 @@ final class FileSystemFactory
      */
     public static function create(?string $baseFolder = null): FileSystemHelper
     {
-        return new FileSystemHelperBase($baseFolder);
+        return new FileSystemHelperImpl($baseFolder);
     }
 }

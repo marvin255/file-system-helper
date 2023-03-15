@@ -68,11 +68,22 @@ interface FileSystemHelper
     public function getTmpDir(): \SplFileInfo;
 
     /**
-     * Iterates over directory children using callback.
+     * Creates iterator object that iterates over the directory content.
+     *
+     * @psalm-return \Iterator<\SplFileInfo>
      *
      * @throws FileSystemException
      */
-    public function iterateDirectory(\SplFileInfo|string $dir, \Closure $callback): void;
+    public function createDirectoryIterator(\SplFileInfo|string $dir): \Iterator;
+
+    /**
+     * Iterates over directory children using callback.
+     *
+     * @psalm-param callable(\SplFileInfo): void $callback
+     *
+     * @throws FileSystemException
+     */
+    public function iterateDirectory(\SplFileInfo|string $dir, callable $callback): void;
 
     /**
      * Tries to create SplFileInfo object from the given path.
