@@ -266,7 +266,7 @@ final class FileSystemHelperBase implements FileSystemHelper
     /**
      * {@inheritDoc}
      */
-    public function iterateDirectory(\SplFileInfo|string $dir, \Closure $callback): void
+    public function createDirectoryIterator(\SplFileInfo|string $dir): \Iterator
     {
         $splEntity = $this->makeFileInfoAndCheckBasePath($dir);
 
@@ -282,12 +282,18 @@ final class FileSystemHelperBase implements FileSystemHelper
             \RecursiveDirectoryIterator::SKIP_DOTS
         );
 
-        $content = new \RecursiveIteratorIterator(
+        return new \RecursiveIteratorIterator(
             $it,
             \RecursiveIteratorIterator::CHILD_FIRST
         );
+    }
 
-        /** @var \SplFileInfo $file */
+    /**
+     * {@inheritDoc}
+     */
+    public function iterateDirectory(\SplFileInfo|string $dir, callable $callback): void
+    {
+        $content = $this->createDirectoryIterator($dir);
         foreach ($content as $file) {
             \call_user_func_array($callback, [$file]);
         }
