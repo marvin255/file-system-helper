@@ -12,7 +12,7 @@ use Marvin255\FileSystemHelper\Helper\PathHelper;
  *
  * @internal
  */
-final class FileSystemHelperBase implements FileSystemHelper
+final class FileSystemHelperImpl implements FileSystemHelper
 {
     private readonly ?string $baseFolder;
 

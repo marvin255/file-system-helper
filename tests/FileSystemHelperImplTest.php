@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Marvin255\FileSystemHelper\Tests;
 
 use Marvin255\FileSystemHelper\Exception\FileSystemException;
-use Marvin255\FileSystemHelper\FileSystemHelperBase;
+use Marvin255\FileSystemHelper\FileSystemHelperImpl;
 
 /**
  * @internal
  */
-class FileSystemHelperBaseTest extends BaseCase
+class FileSystemHelperImplTest extends BaseCase
 {
     /**
      * @test
@@ -23,7 +23,7 @@ class FileSystemHelperBaseTest extends BaseCase
             FileSystemException::create("Base folder '{$path}' doesn't exist")
         );
 
-        new FileSystemHelperBase($path);
+        new FileSystemHelperImpl($path);
     }
 
     /**
@@ -33,7 +33,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testRemove(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
-        $helper = new FileSystemHelperBase($baseDir);
+        $helper = new FileSystemHelperImpl($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -107,7 +107,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testRemoveIfExists(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
-        $helper = new FileSystemHelperBase($baseDir);
+        $helper = new FileSystemHelperImpl($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -140,7 +140,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $helper = new FileSystemHelperBase($baseDir);
+        $helper = new FileSystemHelperImpl($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -245,7 +245,7 @@ class FileSystemHelperBaseTest extends BaseCase
         $destinationNestedFile = $to . '/nested.txt';
         $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
         $helper->copy($from, $to);
 
         $this->assertDirectoryExists($to);
@@ -262,7 +262,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $helper = new FileSystemHelperBase($baseDir);
+        $helper = new FileSystemHelperImpl($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -292,7 +292,7 @@ class FileSystemHelperBaseTest extends BaseCase
         $destinationNestedFile = $to . '/nested.txt';
         $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
         $helper->rename($from, $to);
 
         $this->assertDirectoryExists($to);
@@ -310,7 +310,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testMkdir(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $helper = new FileSystemHelperBase($baseDir);
+        $helper = new FileSystemHelperImpl($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -378,7 +378,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testMkdirIfNotExist(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
-        $helper = new FileSystemHelperBase($baseDir);
+        $helper = new FileSystemHelperImpl($baseDir);
 
         if ($exception) {
             $this->expectExceptionObject($exception);
@@ -420,7 +420,7 @@ class FileSystemHelperBaseTest extends BaseCase
         $nestedDir = $this->getPathToTestDir($dir . '/nested');
         $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
         $helper->emptyDir($dir);
 
         $this->assertDirectoryExists($dir);
@@ -436,7 +436,7 @@ class FileSystemHelperBaseTest extends BaseCase
     {
         $dir = '/unexisted/dir';
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
 
         $this->expectException(FileSystemException::class);
         $this->expectExceptionMessage("Directory '{$dir}' must exist to be emptied");
@@ -450,7 +450,7 @@ class FileSystemHelperBaseTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
 
         $this->expectException(FileSystemException::class);
         $this->expectExceptionMessage("Can't empty directory '{$file}' because it's a file");
@@ -462,7 +462,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testGetTmpDir(): void
     {
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
         $tmpDir = $helper->getTmpDir();
 
         $this->assertInstanceOf(\SplFileInfo::class, $tmpDir);
@@ -475,7 +475,7 @@ class FileSystemHelperBaseTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
 
         $this->expectException(FileSystemException::class);
         $helper->iterateDirectory(
@@ -491,7 +491,7 @@ class FileSystemHelperBaseTest extends BaseCase
     {
         $file = $this->getPathToTestFile();
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
         $fileInfo = $helper->makeFileInfo($file);
 
         $this->assertInstanceOf(\SplFileInfo::class, $fileInfo);
@@ -505,7 +505,7 @@ class FileSystemHelperBaseTest extends BaseCase
     {
         $file = new \SplFileInfo($this->getPathToTestFile());
 
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
         $fileInfo = $helper->makeFileInfo($file);
 
         $this->assertInstanceOf(\SplFileInfo::class, $fileInfo);
@@ -517,7 +517,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testMakeFileInfoEmptyString(): void
     {
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
 
         $this->expectException(FileSystemException::class);
         $helper->makeFileInfo('    ');
@@ -528,7 +528,7 @@ class FileSystemHelperBaseTest extends BaseCase
      */
     public function testMakeFileInfoWrongInput(): void
     {
-        $helper = new FileSystemHelperBase();
+        $helper = new FileSystemHelperImpl();
 
         $this->expectException(FileSystemException::class);
         $helper->makeFileInfo(true);
