@@ -53,30 +53,22 @@ class PathHelperTest extends BaseCase
         ];
     }
 
-    /**
-     * @dataProvider provideRealpath
-     */
-    public function testRealpath(string $path, ?string $awaits): void
-    {
-        $testResult = PathHelper::realpath($path);
-
-        $this->assertSame($awaits, $testResult);
-    }
-
-    public function provideRealpath(): array
+    public function testRealpath(): void
     {
         $path = $this->getPathToTestDir();
 
-        return [
-            'unexisted path' => [
-                '/un/existed/path',
-                null,
-            ],
-            'real path' => [
-                $path,
-                $path,
-            ],
-        ];
+        $testResult = PathHelper::realpath($path);
+
+        $this->assertSame($path, $testResult);
+    }
+
+    public function testRealpathUnexisted(): void
+    {
+        $path = '/un/existed/path';
+
+        $testResult = PathHelper::realpath($path);
+
+        $this->assertNull($testResult);
     }
 
     /**
