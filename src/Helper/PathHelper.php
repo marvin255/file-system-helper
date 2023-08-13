@@ -66,8 +66,7 @@ final class PathHelper
             }
         }
 
-        return ($hasLeadingSlash ? \DIRECTORY_SEPARATOR : '')
-            . implode(\DIRECTORY_SEPARATOR, $absolutes);
+        return ($hasLeadingSlash ? \DIRECTORY_SEPARATOR : '') . implode(\DIRECTORY_SEPARATOR, $absolutes);
     }
 
     /**

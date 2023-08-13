@@ -104,8 +104,8 @@ class PathHelperTest extends BaseCase
                 "{$sep}test",
             ],
             'convert slashes to system slashes' => [
-                "{$nonSep}test",
-                "{$sep}test",
+                "{$nonSep}test{$sep}test",
+                "{$sep}test{$sep}test",
             ],
             'utf path' => [
                 "{$sep}тест{$sep}тест",
