@@ -6,6 +6,8 @@ namespace Marvin255\FileSystemHelper\Exception;
 
 /**
  * Exception class for errors in file helper.
+ *
+ * @psalm-api
  */
 final class FileSystemException extends \Exception
 {
@@ -17,10 +19,7 @@ final class FileSystemException extends \Exception
     /**
      * Creates FileSystemException.
      *
-     * @param string                          $message
      * @param array<int, \SplFileInfo|string> $params
-     *
-     * @return FileSystemException
      */
     public static function create(string $message, ...$params): FileSystemException
     {

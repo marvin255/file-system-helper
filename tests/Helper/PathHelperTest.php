@@ -22,7 +22,7 @@ class PathHelperTest extends BaseCase
         $this->assertSame($awaits, $testResult);
     }
 
-    public function provideIsPathParentForPath(): array
+    public static function provideIsPathParentForPath(): array
     {
         return [
             'is parent path' => [
@@ -89,7 +89,7 @@ class PathHelperTest extends BaseCase
         $this->assertSame($awaits, $testResult);
     }
 
-    public function provideUnifyPath(): array
+    public static function provideUnifyPath(): array
     {
         $sep = \DIRECTORY_SEPARATOR;
         $nonSep = $sep === '\\' ? '/' : '\\';

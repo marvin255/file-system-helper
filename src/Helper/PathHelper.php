@@ -6,6 +6,8 @@ namespace Marvin255\FileSystemHelper\Helper;
 
 /**
  * Set of functions for working with file paths.
+ *
+ * @internal
  */
 final class PathHelper
 {

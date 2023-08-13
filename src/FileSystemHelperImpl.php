@@ -16,7 +16,7 @@ final class FileSystemHelperImpl implements FileSystemHelper
 {
     private readonly ?string $baseFolder;
 
-    public function __construct(?string $baseFolder = null)
+    public function __construct(string $baseFolder = null)
     {
         $validatedBaseFolder = null;
 
@@ -342,7 +342,6 @@ final class FileSystemHelperImpl implements FileSystemHelper
     /**
      * Runs set php function in try/catch.
      *
-     * @param string  $functionName
      * @param mixed[] $params
      *
      * @throws FileSystemException

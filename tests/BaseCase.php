@@ -73,7 +73,7 @@ abstract class BaseCase extends TestCase
     /**
      * Creates file within temporary folder.
      */
-    protected function getPathToTestFile(string $name = '', ?string $content = null): string
+    protected function getPathToTestFile(string $name = '', string $content = null): string
     {
         if ($name === '') {
             $name = md5(random_bytes(10)) . '.txt';
