@@ -18,7 +18,7 @@ abstract class BaseCase extends TestCase
     protected function tearDown(): void
     {
         if ($this->tempDir) {
-            $this->removeDir($this->tempDir);
+            self::removeDir($this->tempDir);
         }
 
         parent::tearDown();
@@ -37,7 +37,7 @@ abstract class BaseCase extends TestCase
                 );
             }
             $this->tempDir .= \DIRECTORY_SEPARATOR . md5(random_bytes(20));
-            $this->removeDir($this->tempDir);
+            self::removeDir($this->tempDir);
             if (!mkdir($this->tempDir, 0777, true)) {
                 throw new \RuntimeException(
                     "Can't create temporary folder: {$this->tempDir}"
@@ -101,7 +101,7 @@ abstract class BaseCase extends TestCase
     /**
      * Removes set dir with all content.
      */
-    protected function removeDir(string $folderPath): void
+    protected static function removeDir(string $folderPath): void
     {
         if (is_dir($folderPath)) {
             $it = new \RecursiveDirectoryIterator(
@@ -127,7 +127,7 @@ abstract class BaseCase extends TestCase
     /**
      * Converts SplFileInfo to string and change delimeters to the set one.
      */
-    protected function convertPathToString(\SplFileInfo|string $path, string $delimeter = \DIRECTORY_SEPARATOR): string
+    protected static function convertPathToString(\SplFileInfo|string $path, string $delimeter = \DIRECTORY_SEPARATOR): string
     {
         $pathStr = $path instanceof \SplFileInfo ? $path->getPathname() : $path;
 
@@ -137,7 +137,7 @@ abstract class BaseCase extends TestCase
     /**
      * Converts string to SplFileInfo.
      */
-    protected function convertPathToSpl(\SplFileInfo|string $path): \SplFileInfo
+    protected static function convertPathToSpl(\SplFileInfo|string $path): \SplFileInfo
     {
         if ($path instanceof \SplFileInfo) {
             return $path;
@@ -151,7 +151,7 @@ abstract class BaseCase extends TestCase
      */
     protected function assertDirectoryHasPermissions(int $awaitedPermissions, \SplFileInfo|string $directory): void
     {
-        $directory = $this->convertPathToString($directory);
+        $directory = self::convertPathToString($directory);
         $awaitedPermissions = sprintf('%o', $awaitedPermissions);
         $realPermissions = substr(sprintf('%o', fileperms($directory)), -3);
         $this->assertSame($awaitedPermissions, $realPermissions, 'Directory has correct permissions');

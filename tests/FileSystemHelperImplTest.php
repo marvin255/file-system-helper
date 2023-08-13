@@ -42,7 +42,7 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->remove($file);
 
         if (!$exception) {
-            $this->assertFileDoesNotExist($this->convertPathToString($file));
+            $this->assertFileDoesNotExist(self::convertPathToString($file));
         }
     }
 
@@ -78,11 +78,11 @@ class FileSystemHelperImplTest extends BaseCase
                 $this->getPathToTestFile(),
             ],
             'remove file with backslashes in name' => [
-                $this->convertPathToString($this->getPathToTestFile('backslashes/test.txt'), '\\'),
-                $this->convertPathToString($this->getPathToTestDir('backslashes'), '\\'),
+                self::convertPathToString($this->getPathToTestFile('backslashes/test.txt'), '\\'),
+                self::convertPathToString($this->getPathToTestDir('backslashes'), '\\'),
             ],
             'remove file object' => [
-                $this->convertPathToSpl($this->getPathToTestFile()),
+                self::convertPathToSpl($this->getPathToTestFile()),
             ],
             'remove dir' => [
                 $dirWithContent,
@@ -116,7 +116,7 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->removeIfExists($file);
 
         if (!$exception) {
-            $this->assertFileDoesNotExist($this->convertPathToString($file));
+            $this->assertFileDoesNotExist(self::convertPathToString($file));
         }
     }
 
@@ -149,8 +149,8 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->copy($from, $to);
 
         if (!$exception) {
-            $from = $this->convertPathToString($from);
-            $to = $this->convertPathToString($to);
+            $from = self::convertPathToString($from);
+            $to = self::convertPathToString($to);
             $this->assertFileExists($to);
             $this->assertFileEquals($from, $to);
         }
@@ -173,8 +173,8 @@ class FileSystemHelperImplTest extends BaseCase
                 $dir . '/copy_destination.txt',
             ],
             'copy file object' => [
-                $this->convertPathToSpl($this->getPathToTestFile()),
-                $this->convertPathToSpl($dir . '/copy_spl_destination.txt'),
+                self::convertPathToSpl($this->getPathToTestFile()),
+                self::convertPathToSpl($dir . '/copy_spl_destination.txt'),
             ],
             'copy unexisted file' => [
                 '/non_existed_file',
@@ -196,8 +196,8 @@ class FileSystemHelperImplTest extends BaseCase
                 $utfDir . '/тест_новый.txt',
             ],
             'copy file with backslashes in name' => [
-                $this->convertPathToString($this->getPathToTestFile(), '\\'),
-                $this->convertPathToString($dir . '/backslashes_destination.txt', '\\'),
+                self::convertPathToString($this->getPathToTestFile(), '\\'),
+                self::convertPathToString($dir . '/backslashes_destination.txt', '\\'),
             ],
             'copy to the path where parent is not a folder' => [
                 $this->getPathToTestFile(),
@@ -271,8 +271,8 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->rename($from, $to);
 
         if (!$exception) {
-            $from = $this->convertPathToString($from);
-            $to = $this->convertPathToString($to);
+            $from = self::convertPathToString($from);
+            $to = self::convertPathToString($to);
             $this->assertFileExists($to);
             $this->assertFileDoesnotExist($from);
         }
@@ -323,7 +323,7 @@ class FileSystemHelperImplTest extends BaseCase
         }
 
         if (!$exception) {
-            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryExists(self::convertPathToString($name));
             $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
         }
     }
@@ -391,7 +391,7 @@ class FileSystemHelperImplTest extends BaseCase
         }
 
         if (!$exception) {
-            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryExists(self::convertPathToString($name));
             $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
         }
     }
