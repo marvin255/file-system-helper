@@ -556,4 +556,56 @@ class FileSystemHelperImplTest extends BaseCase
             ],
         ];
     }
+
+    public function testEmptyDir(): void
+    {
+        $id = [self::class, 'testEmptyDir'];
+        self::clearDir($id);
+
+        $dir = self::getPathToTestDir($id);
+        $nestedFile = self::getPathToTestFile($id);
+        $nestedDir = self::getPathToTestDir($id, 'nested');
+        $nestedFileSecondLevel = self::getPathToTestFile($id, 'nested');
+
+        $helper = new FileSystemHelperImpl();
+        $helper->emptyDir($dir);
+
+        $this->assertDirectoryExists($dir);
+        $this->assertDirectoryDoesNotExist($nestedDir);
+        $this->assertFileDoesnotExist($nestedFile);
+        $this->assertFileDoesnotExist($nestedFileSecondLevel);
+    }
+
+    public function testEmptyDirUnexistedException(): void
+    {
+        $dir = '/unexisted/dir';
+
+        $helper = new FileSystemHelperImpl();
+
+        $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Directory '{$dir}' must exist to be emptied");
+        $helper->emptyDir($dir);
+    }
+
+    public function testEmptyDirFileException(): void
+    {
+        $id = [self::class, 'testEmptyDirFileException'];
+        self::clearDir($id);
+
+        $file = self::getPathToTestFile($id);
+
+        $helper = new FileSystemHelperImpl();
+
+        $this->expectException(FileSystemException::class);
+        $this->expectExceptionMessage("Can't empty directory '{$file}' because it's a file");
+        $helper->emptyDir($file);
+    }
+
+    public function testGetTmpDir(): void
+    {
+        $helper = new FileSystemHelperImpl();
+        $tmpDir = $helper->getTmpDir();
+
+        $this->assertInstanceOf(\SplFileInfo::class, $tmpDir);
+    }
 }
