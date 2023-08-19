@@ -608,4 +608,64 @@ class FileSystemHelperImplTest extends BaseCase
 
         $this->assertInstanceOf(\SplFileInfo::class, $tmpDir);
     }
+
+    public function testIterateNonDirectoryException(): void
+    {
+        $id = [self::class, 'testIterateNonDirectoryException'];
+        self::clearDir($id);
+
+        $file = self::getPathToTestFile($id);
+
+        $helper = new FileSystemHelperImpl();
+
+        $this->expectException(FileSystemException::class);
+        $helper->iterateDirectory(
+            $file,
+            function (): void {}
+        );
+    }
+
+    public function testMakeFileInfoString(): void
+    {
+        $id = [self::class, 'testMakeFileInfoString'];
+        self::clearDir($id);
+
+        $file = self::getPathToTestFile($id);
+
+        $helper = new FileSystemHelperImpl();
+        $fileInfo = $helper->makeFileInfo($file);
+
+        $this->assertInstanceOf(\SplFileInfo::class, $fileInfo);
+        $this->assertSame($file, $fileInfo->getPathname());
+    }
+
+    public function testMakeFileInfoObject(): void
+    {
+        $id = [self::class, 'testMakeFileInfoObject'];
+        self::clearDir($id);
+
+        $file = new \SplFileInfo(self::getPathToTestFile($id));
+
+        $helper = new FileSystemHelperImpl();
+        $fileInfo = $helper->makeFileInfo($file);
+
+        $this->assertInstanceOf(\SplFileInfo::class, $fileInfo);
+        $this->assertSame($file->getPathname(), $fileInfo->getPathname());
+    }
+
+    public function testMakeFileInfoEmptyString(): void
+    {
+        $helper = new FileSystemHelperImpl();
+
+        $this->expectException(FileSystemException::class);
+        $helper->makeFileInfo('    ');
+    }
+
+    public function testMakeFileInfoWrongInput(): void
+    {
+        $helper = new FileSystemHelperImpl();
+
+        $this->expectException(FileSystemException::class);
+        $helper->makeFileInfo(true);
+    }
 }
