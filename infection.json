@@ -27,11 +27,6 @@
             "ignore": [
                 "Marvin255\\FileSystemHelper\\FileSystemHelperImpl::mkdir"
             ]
-        },
-        "ArrayItemRemoval": {
-            "ignore": [
-                "Marvin255\\FileSystemHelper\\Helper\\PathHelper::fixDirectorySeparatorAndTrim"
-            ]
         }
     }
 }
