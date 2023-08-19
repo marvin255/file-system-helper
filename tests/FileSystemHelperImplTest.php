@@ -302,6 +302,106 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertFileEquals($nestedFileSecondLevel, $destinationNestedFileSecondLevel);
     }
 
+    /**
+     * @dataProvider provideRenameFile
+     */
+    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, \Exception $exception = null, string $baseDir = null): void
+    {
+        $helper = new FileSystemHelperImpl($baseDir);
+
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
+
+        $helper->rename($from, $to);
+
+        if (!$exception) {
+            $from = $this->convertPathToString($from);
+            $to = $this->convertPathToString($to);
+            $this->assertFileExists($to);
+            $this->assertFileDoesnotExist($from);
+        }
+    }
+
+    public static function provideRenameFile(): array
+    {
+        $id = [self::class, 'provideRenameFile'];
+        self::clearDir($id);
+
+        return [
+            'rename file' => [
+                self::getPathToTestFile($id, 'dir_1'),
+                self::getPathToTestDir($id, 'dir_1') . '/dest.txt',
+            ],
+            'rename file object' => [
+                self::convertPathToSpl(
+                    self::getPathToTestFile($id, 'dir_2')
+                ),
+                self::convertPathToSpl(
+                    self::getPathToTestDir($id, 'dir_2') . '/dest.txt'
+                ),
+            ],
+            'rename unexisted file' => [
+                '/non_existed_file',
+                '/destination',
+                FileSystemException::create("Can't find source"),
+            ],
+            'rename to existed file' => [
+                self::getPathToTestFile($id, 'dir_3'),
+                self::getPathToTestFile($id, 'dir_3'),
+                FileSystemException::create('already exists'),
+            ],
+            'rename to existed dir' => [
+                self::getPathToTestFile($id, 'dir_4'),
+                self::getPathToTestDir($id, 'dir_4'),
+                FileSystemException::create('already exists'),
+            ],
+            'rename entites with utf in names' => [
+                self::getPathToTestFile($id, 'dir_5', 'тест'),
+                self::getPathToTestDir($id, 'dir_5', 'тест') . '/тест_новый.txt',
+            ],
+            'rename file with backslashes in name' => [
+                self::convertPathToString(
+                    self::getPathToTestFile($id, 'dir_6'),
+                    '\\'
+                ),
+                self::convertPathToString(
+                    self::getPathToTestDir($id, 'dir_6') . '/dest.txt',
+                    '\\'
+                ),
+            ],
+            'rename to the path where parent is not a folder' => [
+                self::getPathToTestFile($id, 'dir_7'),
+                self::getPathToTestFile($id, 'dir_7') . '/file.txt',
+                FileSystemException::create("is not a direcotry or doesn't exist"),
+            ],
+            'rename from outside base folder' => [
+                self::getPathToTestFile($id, 'dir_8'),
+                self::getPathToTestDir($id, 'dir_8', 'base') . '/dest.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestFile($id, 'dir_8', 'base'),
+            ],
+            'rename to outside base folder' => [
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+                self::getPathToTestDir($id, 'dir_9') . '/dest.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+            ],
+            'rename from outside base folder by relative path' => [
+                self::getPathToTestDir($id, 'dir_10') . '/../outside_base_dir/outside_base_dir.txt',
+                self::getPathToTestDir($id, 'dir_10') . '/outside_base_dir_destination.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'dir_10'),
+            ],
+            'rename to outside base folder by relative path' => [
+                self::getPathToTestFile($id, 'dir_11'),
+                self::getPathToTestDir($id, 'dir_11') . '/../outside_base_dir/outside_base_dir.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'dir_11'),
+            ],
+        ];
+    }
+
     public function testRenameDir(): void
     {
         $id = [self::class, 'testRenameDir'];
