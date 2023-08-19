@@ -13,89 +13,85 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class BaseCase extends TestCase
 {
-    private ?string $tempDir = null;
-
-    protected function tearDown(): void
-    {
-        if ($this->tempDir) {
-            self::removeDir($this->tempDir);
-        }
-
-        parent::tearDown();
-    }
-
     /**
      * Returns path to temporary folder.
      */
-    protected function getTempDir(): string
+    protected static function getTempDir(): string
     {
-        if ($this->tempDir === null) {
-            $this->tempDir = sys_get_temp_dir();
-            if (!$this->tempDir || !is_writable($this->tempDir)) {
-                throw new \RuntimeException(
-                    "Can't find or write temporary folder: {$this->tempDir}"
-                );
-            }
-            $this->tempDir .= \DIRECTORY_SEPARATOR . md5(random_bytes(20));
-            self::removeDir($this->tempDir);
-            if (!mkdir($this->tempDir, 0777, true)) {
-                throw new \RuntimeException(
-                    "Can't create temporary folder: {$this->tempDir}"
-                );
-            }
+        $tmpDir = sys_get_temp_dir();
+
+        if (!$tmpDir || !is_writable($tmpDir)) {
+            throw new \RuntimeException(
+                "Can't find or write temporary folder: {$tmpDir}"
+            );
         }
 
-        return $this->tempDir;
+        $tmpDir .= \DIRECTORY_SEPARATOR . 'file_system_helper_test';
+
+        if (!is_dir($tmpDir) && !mkdir($tmpDir, 0777, true)) {
+            throw new \RuntimeException(
+                "Can't create temporary folder: {$tmpDir}"
+            );
+        }
+
+        return $tmpDir;
     }
 
     /**
      * Creates new directory for test and returns it's absolute path.
+     *
+     * @psalm-param string[]|string[][] $parts
      */
-    protected function getPathToTestDir(string $name = ''): string
+    protected static function getPathToTestDir(...$parts): string
     {
-        if ($name === '') {
-            $name = md5(random_bytes(10));
+        $flattenParts = [];
+        foreach ($parts as $part) {
+            if (\is_array($part)) {
+                $flattenParts = array_merge($flattenParts, $part);
+            } else {
+                $flattenParts[] = $part;
+            }
         }
 
-        if (strpos($name, $this->getTempDir() . \DIRECTORY_SEPARATOR) === 0) {
-            $pathToFolder = $name;
-        } else {
-            $pathToFolder = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
+        $preparedParts = [self::getTempDir()];
+        foreach ($flattenParts as $part) {
+            $preparedPart = trim($part);
+            $preparedPart = mb_strtolower($part);
+            $preparedPart = str_replace([' ', '\\', '/', '.', ','], '_', $preparedPart);
+            if ($preparedPart !== '') {
+                $preparedParts[] = $preparedPart;
+            }
         }
 
-        if (!file_exists($pathToFolder) && !mkdir($pathToFolder, 0777, true)) {
-            throw new \RuntimeException("Can't create {$pathToFolder} folder");
+        if (\count($preparedParts) < 2) {
+            throw new \RuntimeException('Parts for path must be provided');
         }
 
-        return $pathToFolder;
+        $path = implode(\DIRECTORY_SEPARATOR, $preparedParts);
+
+        if (!is_dir($path) && !mkdir($path, 0777, true)) {
+            throw new \RuntimeException("Can't create {$path} folder");
+        }
+
+        return $path;
     }
 
     /**
      * Creates file within temporary folder.
+     *
+     * @psalm-param string[]|string[][] $parts
      */
-    protected function getPathToTestFile(string $name = '', string $content = null): string
+    protected static function getPathToTestFile(...$parts): string
     {
-        if ($name === '') {
-            $name = md5(random_bytes(10)) . '.txt';
+        $content = md5(random_bytes(10));
+        $dir = self::getPathToTestDir(...$parts);
+        $file = $dir . \DIRECTORY_SEPARATOR . md5(random_bytes(10)) . '.txt';
+
+        if (file_put_contents($file, $content) === false) {
+            throw new \RuntimeException("Can't create file {$file}");
         }
 
-        if (strpos($name, $this->getTempDir()) === 0) {
-            $pathToFile = $name;
-        } else {
-            $pathToFile = $this->getTempDir() . \DIRECTORY_SEPARATOR . $name;
-        }
-
-        $dir = pathinfo($pathToFile, \PATHINFO_DIRNAME);
-        if (!file_exists($dir) && !mkdir($dir, 0777, true)) {
-            throw new \RuntimeException("Can't create folder {$dir} for the tests file {$name}");
-        }
-
-        $content = $content === null ? md5(random_bytes(10)) : $content;
-        if (file_put_contents($pathToFile, $content) === false) {
-            throw new \RuntimeException("Can't create file {$pathToFile}");
-        }
-
-        return $pathToFile;
+        return $file;
     }
 
     /**

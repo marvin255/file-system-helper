@@ -55,7 +55,7 @@ class PathHelperTest extends BaseCase
 
     public function testRealpath(): void
     {
-        $path = $this->getPathToTestDir();
+        $path = __DIR__;
 
         $testResult = PathHelper::realpath($path);
 
