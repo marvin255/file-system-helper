@@ -12,26 +12,19 @@ use Marvin255\FileSystemHelper\FileSystemHelperImpl;
  */
 class FileSystemHelperImplTest extends BaseCase
 {
-    /**
-     * @test
-     */
     public function testEmptyBasePathUnexistedInConstructException(): void
     {
         $path = '/test-path-123';
+        $exception = FileSystemException::create("Base folder '{$path}' doesn't exist");
 
-        $this->expectExceptionObject(
-            FileSystemException::create("Base folder '{$path}' doesn't exist")
-        );
-
+        $this->expectExceptionObject($exception);
         new FileSystemHelperImpl($path);
     }
 
     /**
-     * @test
-     *
      * @dataProvider provideRemove
      */
-    public function testRemove(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
+    public function testRemove(string|\SplFileInfo $file, string $baseDir = null, \Exception $exception = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -42,47 +35,55 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->remove($file);
 
         if (!$exception) {
-            $this->assertFileDoesNotExist($this->convertPathToString($file));
+            $this->assertFileDoesNotExist(self::convertPathToString($file));
         }
     }
 
-    /**
-     * @return array<string, mixed[]>
-     */
-    public function provideRemove(): array
+    public static function provideRemove(): array
     {
-        $dirWithContent = $this->getPathToTestDir('dir_with_content');
-        $this->getPathToTestFile($dirWithContent . '/nested.txt');
-        $this->getPathToTestFile($dirWithContent . '/nested_folder/nested_second.txt');
+        $id = [self::class, 'provideRemove'];
+        self::clearDir($id);
+
+        $dirWithContent = self::getPathToTestDir($id, 'dir_content');
+        self::getPathToTestFile($id, 'dir_content', 'nested');
+        self::getPathToTestFile($id, 'dir_content');
 
         return [
             'remove file out of restricted folder' => [
-                $this->getPathToTestFile('wrong_base_folder/file.txt'),
-                $this->getPathToTestDir('base_folder'),
+                self::getPathToTestFile($id, 'dir_1'),
+                self::getPathToTestDir($id, 'dir_1', 'nested'),
                 FileSystemException::create('All paths must be within base directory'),
             ],
             'remove file within base folder' => [
-                $this->getPathToTestFile('correct_base_folder/test.txt'),
-                $this->getPathToTestDir('correct_base_folder'),
+                self::getPathToTestFile($id, 'dir_2'),
+                self::getPathToTestDir($id, 'dir_2'),
             ],
             'remove file out of restricted folder by relative path' => [
-                $this->getPathToTestDir('relative_base_folder/nested') . '/../../',
-                $this->getPathToTestDir('relative_base_folder'),
+                self::getPathToTestDir($id, 'dir_3', 'nested') . '/../../',
+                self::getPathToTestDir($id, 'dir_3'),
                 FileSystemException::create('All paths must be within base directory'),
             ],
             'remove file with utf symbols in the name' => [
-                $this->getPathToTestFile('тест/тест.txt'),
-                $this->getPathToTestDir('тест'),
+                self::getPathToTestFile($id, 'dir_4', 'тест'),
+                self::getPathToTestDir($id, 'dir_4', 'тест'),
             ],
             'remove file without base folder set' => [
-                $this->getPathToTestFile(),
+                self::getPathToTestFile($id, 'dir_5'),
             ],
             'remove file with backslashes in name' => [
-                $this->convertPathToString($this->getPathToTestFile('backslashes/test.txt'), '\\'),
-                $this->convertPathToString($this->getPathToTestDir('backslashes'), '\\'),
+                self::convertPathToString(
+                    self::getPathToTestFile($id, 'dir_6'),
+                    '\\'
+                ),
+                self::convertPathToString(
+                    self::getPathToTestDir($id, 'dir_6'),
+                    '\\'
+                ),
             ],
             'remove file object' => [
-                $this->convertPathToSpl($this->getPathToTestFile()),
+                self::convertPathToSpl(
+                    self::getPathToTestFile($id, 'dir_7')
+                ),
             ],
             'remove dir' => [
                 $dirWithContent,
@@ -90,22 +91,20 @@ class FileSystemHelperImplTest extends BaseCase
             'remove non existed entity' => [
                 '/test_file_not_exist.txt',
                 null,
-                FileSystemException::create('Can\'t find entity'),
+                FileSystemException::create("Can't find entity"),
             ],
             'remove with empty string' => [
                 '',
                 null,
-                FileSystemException::create('Can\'t create SplFileInfo'),
+                FileSystemException::create("Can't create SplFileInfo"),
             ],
         ];
     }
 
     /**
-     * @test
-     *
      * @dataProvider provideRemoveIfExists
      */
-    public function testRemoveIfExists(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
+    public function testRemoveIfExists(string|\SplFileInfo $file, string $baseDir = null, \Exception $exception = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -120,25 +119,70 @@ class FileSystemHelperImplTest extends BaseCase
         }
     }
 
-    /**
-     * @return array<string, mixed[]>
-     */
-    public function provideRemoveIfExists(): array
+    public static function provideRemoveIfExists(): array
     {
-        $tests = $this->provideRemove();
-        $tests['remove non existed entity'] = [
-            '/test_file_not_exist.txt',
-        ];
+        $id = [self::class, 'provideRemoveIfExists'];
+        self::clearDir($id);
 
-        return $tests;
+        $dirWithContent = self::getPathToTestDir($id, 'dir_content');
+        self::getPathToTestFile($id, 'dir_content', 'nested');
+        self::getPathToTestFile($id, 'dir_content');
+
+        return [
+            'remove file out of restricted folder' => [
+                self::getPathToTestFile($id, 'dir_1'),
+                self::getPathToTestDir($id, 'dir_1', 'nested'),
+                FileSystemException::create('All paths must be within base directory'),
+            ],
+            'remove file within base folder' => [
+                self::getPathToTestFile($id, 'dir_2'),
+                self::getPathToTestDir($id, 'dir_2'),
+            ],
+            'remove file out of restricted folder by relative path' => [
+                self::getPathToTestDir($id, 'dir_3', 'nested') . '/../../',
+                self::getPathToTestDir($id, 'dir_3'),
+                FileSystemException::create('All paths must be within base directory'),
+            ],
+            'remove file with utf symbols in the name' => [
+                self::getPathToTestFile($id, 'dir_4', 'тест'),
+                self::getPathToTestDir($id, 'dir_4', 'тест'),
+            ],
+            'remove file without base folder set' => [
+                self::getPathToTestFile($id, 'dir_5'),
+            ],
+            'remove file with backslashes in name' => [
+                self::convertPathToString(
+                    self::getPathToTestFile($id, 'dir_6'),
+                    '\\'
+                ),
+                self::convertPathToString(
+                    self::getPathToTestDir($id, 'dir_6'),
+                    '\\'
+                ),
+            ],
+            'remove file object' => [
+                self::convertPathToSpl(
+                    self::getPathToTestFile($id, 'dir_7')
+                ),
+            ],
+            'remove dir' => [
+                $dirWithContent,
+            ],
+            'remove non existed entity' => [
+                '/test_file_not_exist.txt',
+            ],
+            'remove with empty string' => [
+                '',
+                null,
+                FileSystemException::create("Can't create SplFileInfo"),
+            ],
+        ];
     }
 
     /**
-     * @test
-     *
      * @dataProvider provideCopyFile
      */
-    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
+    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, \Exception $exception = null, string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -149,101 +193,104 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->copy($from, $to);
 
         if (!$exception) {
-            $from = $this->convertPathToString($from);
-            $to = $this->convertPathToString($to);
+            $from = self::convertPathToString($from);
+            $to = self::convertPathToString($to);
             $this->assertFileExists($to);
             $this->assertFileEquals($from, $to);
         }
     }
 
-    /**
-     * @return array<string, mixed[]>
-     */
-    public function provideCopyFile(): array
+    public static function provideCopyFile(): array
     {
-        $dir = $this->getPathToTestDir('copy');
-        $utfDir = $this->getPathToTestDir('копирование');
-
-        $dirOutsideBaseDir = $this->getPathToTestDir('outside_base_dir');
-        $this->getPathToTestDir($dirOutsideBaseDir . '/outside_base_dir.txt');
+        $id = [self::class, 'provideCopyFile'];
+        self::clearDir($id);
 
         return [
             'copy file' => [
-                $this->getPathToTestFile(),
-                $dir . '/copy_destination.txt',
+                self::getPathToTestFile($id, 'dir_1'),
+                self::getPathToTestDir($id, 'dir_1') . '/dest.txt',
             ],
             'copy file object' => [
-                $this->convertPathToSpl($this->getPathToTestFile()),
-                $this->convertPathToSpl($dir . '/copy_spl_destination.txt'),
+                self::convertPathToSpl(
+                    self::getPathToTestFile($id, 'dir_2')
+                ),
+                self::convertPathToSpl(
+                    self::getPathToTestDir($id, 'dir_2') . '/dest.txt'
+                ),
             ],
             'copy unexisted file' => [
                 '/non_existed_file',
                 '/destination',
-                FileSystemException::create('Can\'t find source'),
+                FileSystemException::create("Can't find source"),
             ],
             'copy to existed file' => [
-                $this->getPathToTestFile(),
-                $this->getPathToTestFile(),
+                self::getPathToTestFile($id, 'dir_3'),
+                self::getPathToTestFile($id, 'dir_3'),
                 FileSystemException::create('already exists'),
             ],
             'copy to existed dir' => [
-                $this->getPathToTestFile(),
-                $this->getPathToTestDir(),
+                self::getPathToTestFile($id, 'dir_4'),
+                self::getPathToTestDir($id, 'dir_4'),
                 FileSystemException::create('already exists'),
             ],
             'copy entites with utf in names' => [
-                $this->getPathToTestFile($utfDir . '/тест.txt'),
-                $utfDir . '/тест_новый.txt',
+                self::getPathToTestFile($id, 'dir_5', 'тест'),
+                self::getPathToTestDir($id, 'dir_5', 'тест') . '/тест_новый.txt',
             ],
             'copy file with backslashes in name' => [
-                $this->convertPathToString($this->getPathToTestFile(), '\\'),
-                $this->convertPathToString($dir . '/backslashes_destination.txt', '\\'),
+                self::convertPathToString(
+                    self::getPathToTestFile($id, 'dir_6'),
+                    '\\'
+                ),
+                self::convertPathToString(
+                    self::getPathToTestDir($id, 'dir_6') . '/dest.txt',
+                    '\\'
+                ),
             ],
             'copy to the path where parent is not a folder' => [
-                $this->getPathToTestFile(),
-                $this->getPathToTestFile() . '/file.txt',
-                FileSystemException::create('is not a direcotry or doesn\'t exist'),
+                self::getPathToTestFile($id, 'dir_7'),
+                self::getPathToTestFile($id, 'dir_7') . '/file.txt',
+                FileSystemException::create("is not a direcotry or doesn't exist"),
             ],
             'copy from outside base folder' => [
-                $this->getPathToTestFile('outside_base_dir/test.txt'),
-                $dir . '/outside_base_dir_destination.txt',
+                self::getPathToTestFile($id, 'dir_8'),
+                self::getPathToTestDir($id, 'dir_8', 'base') . '/dest.txt',
                 FileSystemException::create('All paths must be within base directory'),
-                $dir,
+                self::getPathToTestFile($id, 'dir_8', 'base'),
             ],
             'copy to outside base folder' => [
-                $this->getPathToTestFile($dir . '/test.txt'),
-                $this->getPathToTestDir() . '/outside_base_dir_destination.txt',
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+                self::getPathToTestDir($id, 'dir_9') . '/dest.txt',
                 FileSystemException::create('All paths must be within base directory'),
-                $dir,
+                self::getPathToTestFile($id, 'dir_9', 'base'),
             ],
             'copy from outside base folder by relative path' => [
-                $dir . '/../outside_base_dir/outside_base_dir.txt',
-                $dir . '/outside_base_dir_destination.txt',
+                self::getPathToTestDir($id, 'dir_10') . '/../outside_base_dir/outside_base_dir.txt',
+                self::getPathToTestDir($id, 'dir_10') . '/outside_base_dir_destination.txt',
                 FileSystemException::create('All paths must be within base directory'),
-                $dir,
+                self::getPathToTestDir($id, 'dir_10'),
             ],
             'copy to outside base folder by relative path' => [
-                $this->getPathToTestFile($dir . '/outside_base_dir_destination.txt'),
-                $dir . '/../outside_base_dir/outside_base_dir.txt',
+                self::getPathToTestFile($id, 'dir_11'),
+                self::getPathToTestDir($id, 'dir_11') . '/../outside_base_dir/outside_base_dir.txt',
                 FileSystemException::create('All paths must be within base directory'),
-                $dir,
+                self::getPathToTestDir($id, 'dir_11'),
             ],
         ];
     }
 
-    /**
-     * @test
-     */
     public function testCopyDir(): void
     {
-        $from = $this->getPathToTestDir();
-        $nestedFile = $this->getPathToTestFile($from . '/nested.txt');
-        $nestedDir = $this->getPathToTestDir($from . '/nested');
-        $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
+        $id = [self::class, 'testCopyDir'];
+        self::clearDir($id);
 
-        $to = $this->getTempDir() . '/destination';
-        $destinationNestedFile = $to . '/nested.txt';
-        $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
+        $from = self::getPathToTestDir($id, 'source');
+        $nestedFile = self::getPathToTestFile($id, 'source');
+        $nestedFileSecondLevel = self::getPathToTestFile($id, 'source', 'nested');
+
+        $to = self::getPathToTestDir($id) . '/destination';
+        $destinationNestedFile = $to . '/' . pathinfo($nestedFile, \PATHINFO_BASENAME);
+        $destinationNestedFileSecondLevel = $to . '/nested/' . pathinfo($nestedFileSecondLevel, \PATHINFO_BASENAME);
 
         $helper = new FileSystemHelperImpl();
         $helper->copy($from, $to);
@@ -256,11 +303,9 @@ class FileSystemHelperImplTest extends BaseCase
     }
 
     /**
-     * @test
-     *
-     * @dataProvider provideCopyFile
+     * @dataProvider provideRenameFile
      */
-    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
+    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, \Exception $exception = null, string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -278,19 +323,97 @@ class FileSystemHelperImplTest extends BaseCase
         }
     }
 
-    /**
-     * @test
-     */
+    public static function provideRenameFile(): array
+    {
+        $id = [self::class, 'provideRenameFile'];
+        self::clearDir($id);
+
+        return [
+            'rename file' => [
+                self::getPathToTestFile($id, 'dir_1'),
+                self::getPathToTestDir($id, 'dir_1') . '/dest.txt',
+            ],
+            'rename file object' => [
+                self::convertPathToSpl(
+                    self::getPathToTestFile($id, 'dir_2')
+                ),
+                self::convertPathToSpl(
+                    self::getPathToTestDir($id, 'dir_2') . '/dest.txt'
+                ),
+            ],
+            'rename unexisted file' => [
+                '/non_existed_file',
+                '/destination',
+                FileSystemException::create("Can't find source"),
+            ],
+            'rename to existed file' => [
+                self::getPathToTestFile($id, 'dir_3'),
+                self::getPathToTestFile($id, 'dir_3'),
+                FileSystemException::create('already exists'),
+            ],
+            'rename to existed dir' => [
+                self::getPathToTestFile($id, 'dir_4'),
+                self::getPathToTestDir($id, 'dir_4'),
+                FileSystemException::create('already exists'),
+            ],
+            'rename entites with utf in names' => [
+                self::getPathToTestFile($id, 'dir_5', 'тест'),
+                self::getPathToTestDir($id, 'dir_5', 'тест') . '/тест_новый.txt',
+            ],
+            'rename file with backslashes in name' => [
+                self::convertPathToString(
+                    self::getPathToTestFile($id, 'dir_6'),
+                    '\\'
+                ),
+                self::convertPathToString(
+                    self::getPathToTestDir($id, 'dir_6') . '/dest.txt',
+                    '\\'
+                ),
+            ],
+            'rename to the path where parent is not a folder' => [
+                self::getPathToTestFile($id, 'dir_7'),
+                self::getPathToTestFile($id, 'dir_7') . '/file.txt',
+                FileSystemException::create("is not a direcotry or doesn't exist"),
+            ],
+            'rename from outside base folder' => [
+                self::getPathToTestFile($id, 'dir_8'),
+                self::getPathToTestDir($id, 'dir_8', 'base') . '/dest.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestFile($id, 'dir_8', 'base'),
+            ],
+            'rename to outside base folder' => [
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+                self::getPathToTestDir($id, 'dir_9') . '/dest.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+            ],
+            'rename from outside base folder by relative path' => [
+                self::getPathToTestDir($id, 'dir_10') . '/../outside_base_dir/outside_base_dir.txt',
+                self::getPathToTestDir($id, 'dir_10') . '/outside_base_dir_destination.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'dir_10'),
+            ],
+            'rename to outside base folder by relative path' => [
+                self::getPathToTestFile($id, 'dir_11'),
+                self::getPathToTestDir($id, 'dir_11') . '/../outside_base_dir/outside_base_dir.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'dir_11'),
+            ],
+        ];
+    }
+
     public function testRenameDir(): void
     {
-        $from = $this->getPathToTestDir();
-        $nestedFile = $this->getPathToTestFile($from . '/nested.txt');
-        $nestedDir = $this->getPathToTestDir($from . '/nested');
-        $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
+        $id = [self::class, 'testRenameDir'];
+        self::clearDir($id);
 
-        $to = $this->getTempDir() . '/destination';
-        $destinationNestedFile = $to . '/nested.txt';
-        $destinationNestedFileSecondLevel = $to . '/nested/nested_second.txt';
+        $from = self::getPathToTestDir($id, 'source');
+        $nestedFile = self::getPathToTestFile($id, 'source');
+        $nestedFileSecondLevel = self::getPathToTestFile($id, 'source', 'nested');
+
+        $to = self::getPathToTestDir($id) . '/destination';
+        $destinationNestedFile = $to . '/' . pathinfo($nestedFile, \PATHINFO_BASENAME);
+        $destinationNestedFileSecondLevel = $to . '/nested/' . pathinfo($nestedFileSecondLevel, \PATHINFO_BASENAME);
 
         $helper = new FileSystemHelperImpl();
         $helper->rename($from, $to);
@@ -304,11 +427,9 @@ class FileSystemHelperImplTest extends BaseCase
     }
 
     /**
-     * @test
-     *
      * @dataProvider provideMkdir
      */
-    public function testMkdir(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
+    public function testMkdir(\SplFileInfo|string $name, int $permissions = null, \Exception $exception = null, string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -328,55 +449,53 @@ class FileSystemHelperImplTest extends BaseCase
         }
     }
 
-    /**
-     * @return array<string, mixed[]>
-     */
-    public function provideMkdir(): array
+    public static function provideMkdir(): array
     {
+        $id = [self::class, 'provideMkdir'];
+        self::clearDir($id);
+
         return [
             'make dir' => [
-                $this->getPathToTestDir() . '/dir_1',
+                self::getPathToTestDir($id) . '/dir_1',
                 0775,
             ],
             'make dir with default permissions' => [
-                $this->getPathToTestDir() . '/dir_2',
+                self::getPathToTestDir($id) . '/dir_2',
             ],
             'make nested dir' => [
-                $this->getPathToTestDir() . '/one_1/two_1/three_1',
+                self::getPathToTestDir($id) . '/one_1/two_1/three_1',
                 0775,
             ],
             'make nested dir with default permissions' => [
-                $this->getPathToTestDir() . '/one_2/two_2/three_2',
+                self::getPathToTestDir($id) . '/one_2/two_2/three_2',
             ],
             'dir already exists' => [
-                $this->getPathToTestDir(),
+                self::getPathToTestDir($id, 'existed'),
                 null,
                 FileSystemException::create('already exists'),
             ],
             'make dir outside base dir' => [
-                $this->getPathToTestDir() . '/outside',
+                self::getPathToTestDir($id) . '/outside',
                 null,
                 FileSystemException::create('All paths must be within base directory'),
-                $this->getPathToTestDir(),
+                self::getPathToTestDir($id, 'base'),
             ],
             'make dir outside base dir by relative path' => [
-                $this->getPathToTestDir() . '/../../outside',
+                self::getPathToTestDir($id) . '/../../outside',
                 null,
                 FileSystemException::create('All paths must be within base directory'),
-                $this->getPathToTestDir(),
+                self::getPathToTestDir($id),
             ],
             'make dir with utf symbols' => [
-                $this->getPathToTestDir() . '/тест',
+                self::getPathToTestDir($id) . '/тест',
             ],
         ];
     }
 
     /**
-     * @test
-     *
      * @dataProvider provideMkdirIfNotExist
      */
-    public function testMkdirIfNotExist(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
+    public function testMkdirIfNotExist(\SplFileInfo|string $name, int $permissions = null, \Exception $exception = null, string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -396,29 +515,57 @@ class FileSystemHelperImplTest extends BaseCase
         }
     }
 
-    /**
-     * @return array<string, mixed[]>
-     */
-    public function provideMkdirIfNotExist(): array
+    public static function provideMkdirIfNotExist(): array
     {
-        $tests = $this->provideMkdir();
-        $tests['dir already exists'] = [
-            $this->getPathToTestDir(),
-            0755,
-        ];
+        $id = [self::class, 'provideMkdirIfNotExist'];
+        self::clearDir($id);
 
-        return $tests;
+        return [
+            'make dir' => [
+                self::getPathToTestDir($id) . '/dir_1',
+                0775,
+            ],
+            'make dir with default permissions' => [
+                self::getPathToTestDir($id) . '/dir_2',
+            ],
+            'make nested dir' => [
+                self::getPathToTestDir($id) . '/one_1/two_1/three_1',
+                0775,
+            ],
+            'make nested dir with default permissions' => [
+                self::getPathToTestDir($id) . '/one_2/two_2/three_2',
+            ],
+            'dir already exists' => [
+                self::getPathToTestDir($id, 'existed'),
+                0755,
+            ],
+            'make dir outside base dir' => [
+                self::getPathToTestDir($id) . '/outside',
+                null,
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'base'),
+            ],
+            'make dir outside base dir by relative path' => [
+                self::getPathToTestDir($id) . '/../../outside',
+                null,
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id),
+            ],
+            'make dir with utf symbols' => [
+                self::getPathToTestDir($id) . '/тест',
+            ],
+        ];
     }
 
-    /**
-     * @test
-     */
     public function testEmptyDir(): void
     {
-        $dir = $this->getPathToTestDir();
-        $nestedFile = $this->getPathToTestFile($dir . '/nested.txt');
-        $nestedDir = $this->getPathToTestDir($dir . '/nested');
-        $nestedFileSecondLevel = $this->getPathToTestFile($nestedDir . '/nested_second.txt');
+        $id = [self::class, 'testEmptyDir'];
+        self::clearDir($id);
+
+        $dir = self::getPathToTestDir($id);
+        $nestedFile = self::getPathToTestFile($id);
+        $nestedDir = self::getPathToTestDir($id, 'nested');
+        $nestedFileSecondLevel = self::getPathToTestFile($id, 'nested');
 
         $helper = new FileSystemHelperImpl();
         $helper->emptyDir($dir);
@@ -429,9 +576,6 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertFileDoesnotExist($nestedFileSecondLevel);
     }
 
-    /**
-     * @test
-     */
     public function testEmptyDirUnexistedException(): void
     {
         $dir = '/unexisted/dir';
@@ -443,12 +587,12 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->emptyDir($dir);
     }
 
-    /**
-     * @test
-     */
     public function testEmptyDirFileException(): void
     {
-        $file = $this->getPathToTestFile();
+        $id = [self::class, 'testEmptyDirFileException'];
+        self::clearDir($id);
+
+        $file = self::getPathToTestFile($id);
 
         $helper = new FileSystemHelperImpl();
 
@@ -457,9 +601,6 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->emptyDir($file);
     }
 
-    /**
-     * @test
-     */
     public function testGetTmpDir(): void
     {
         $helper = new FileSystemHelperImpl();
@@ -468,12 +609,12 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertInstanceOf(\SplFileInfo::class, $tmpDir);
     }
 
-    /**
-     * @test
-     */
     public function testIterateNonDirectoryException(): void
     {
-        $file = $this->getPathToTestFile();
+        $id = [self::class, 'testIterateNonDirectoryException'];
+        self::clearDir($id);
+
+        $file = self::getPathToTestFile($id);
 
         $helper = new FileSystemHelperImpl();
 
@@ -484,12 +625,12 @@ class FileSystemHelperImplTest extends BaseCase
         );
     }
 
-    /**
-     * @test
-     */
     public function testMakeFileInfoString(): void
     {
-        $file = $this->getPathToTestFile();
+        $id = [self::class, 'testMakeFileInfoString'];
+        self::clearDir($id);
+
+        $file = self::getPathToTestFile($id);
 
         $helper = new FileSystemHelperImpl();
         $fileInfo = $helper->makeFileInfo($file);
@@ -498,12 +639,12 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertSame($file, $fileInfo->getPathname());
     }
 
-    /**
-     * @test
-     */
     public function testMakeFileInfoObject(): void
     {
-        $file = new \SplFileInfo($this->getPathToTestFile());
+        $id = [self::class, 'testMakeFileInfoObject'];
+        self::clearDir($id);
+
+        $file = new \SplFileInfo(self::getPathToTestFile($id));
 
         $helper = new FileSystemHelperImpl();
         $fileInfo = $helper->makeFileInfo($file);
@@ -512,9 +653,6 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertSame($file->getPathname(), $fileInfo->getPathname());
     }
 
-    /**
-     * @test
-     */
     public function testMakeFileInfoEmptyString(): void
     {
         $helper = new FileSystemHelperImpl();
@@ -523,9 +661,6 @@ class FileSystemHelperImplTest extends BaseCase
         $helper->makeFileInfo('    ');
     }
 
-    /**
-     * @test
-     */
     public function testMakeFileInfoWrongInput(): void
     {
         $helper = new FileSystemHelperImpl();

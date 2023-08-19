@@ -17,21 +17,6 @@
                 "Marvin255\\FileSystemHelper\\FileSystemHelperImpl::rename",
                 "Marvin255\\FileSystemHelper\\FileSystemHelperImpl::runPhpFunction"
             ]
-        },
-        "LogicalOr": {
-            "ignore": [
-                "Marvin255\\FileSystemHelper\\FileSystemHelperImpl::getTmpDir"
-            ]
-        },
-        "TrueValue": {
-            "ignore": [
-                "Marvin255\\FileSystemHelper\\FileSystemHelperImpl::mkdir"
-            ]
-        },
-        "ArrayItemRemoval": {
-            "ignore": [
-                "Marvin255\\FileSystemHelper\\Helper\\PathHelper::fixDirectorySeparatorAndTrim"
-            ]
         }
     }
 }

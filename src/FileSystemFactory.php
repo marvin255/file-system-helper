@@ -6,6 +6,8 @@ namespace Marvin255\FileSystemHelper;
 
 /**
  * Factory object for file system helper.
+ *
+ * @psalm-api
  */
 final class FileSystemFactory
 {
@@ -15,12 +17,8 @@ final class FileSystemFactory
 
     /**
      * Creates new FileSystemHelperInterface instance with default settings.
-     *
-     * @param string|null $baseFolder
-     *
-     * @return FileSystemHelper
      */
-    public static function create(?string $baseFolder = null): FileSystemHelper
+    public static function create(string $baseFolder = null): FileSystemHelper
     {
         return new FileSystemHelperImpl($baseFolder);
     }

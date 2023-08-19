@@ -22,7 +22,7 @@ class PathHelperTest extends BaseCase
         $this->assertSame($awaits, $testResult);
     }
 
-    public function provideIsPathParentForPath(): array
+    public static function provideIsPathParentForPath(): array
     {
         return [
             'is parent path' => [
@@ -53,30 +53,22 @@ class PathHelperTest extends BaseCase
         ];
     }
 
-    /**
-     * @dataProvider provideRealpath
-     */
-    public function testRealpath(string $path, ?string $awaits): void
+    public function testRealpath(): void
     {
+        $path = __DIR__;
+
         $testResult = PathHelper::realpath($path);
 
-        $this->assertSame($awaits, $testResult);
+        $this->assertSame($path, $testResult);
     }
 
-    public function provideRealpath(): array
+    public function testRealpathUnexisted(): void
     {
-        $path = $this->getPathToTestDir();
+        $path = '/un/existed/path';
 
-        return [
-            'unexisted path' => [
-                '/un/existed/path',
-                null,
-            ],
-            'real path' => [
-                $path,
-                $path,
-            ],
-        ];
+        $testResult = PathHelper::realpath($path);
+
+        $this->assertNull($testResult);
     }
 
     /**
@@ -89,7 +81,7 @@ class PathHelperTest extends BaseCase
         $this->assertSame($awaits, $testResult);
     }
 
-    public function provideUnifyPath(): array
+    public static function provideUnifyPath(): array
     {
         $sep = \DIRECTORY_SEPARATOR;
         $nonSep = $sep === '\\' ? '/' : '\\';
@@ -104,8 +96,8 @@ class PathHelperTest extends BaseCase
                 "{$sep}test",
             ],
             'convert slashes to system slashes' => [
-                "{$nonSep}test",
-                "{$sep}test",
+                "{$nonSep}test{$sep}test",
+                "{$sep}test{$sep}test",
             ],
             'utf path' => [
                 "{$sep}тест{$sep}тест",

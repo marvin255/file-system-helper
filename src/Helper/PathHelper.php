@@ -6,6 +6,8 @@ namespace Marvin255\FileSystemHelper\Helper;
 
 /**
  * Set of functions for working with file paths.
+ *
+ * @internal
  */
 final class PathHelper
 {
@@ -64,8 +66,7 @@ final class PathHelper
             }
         }
 
-        return ($hasLeadingSlash ? \DIRECTORY_SEPARATOR : '')
-            . implode(\DIRECTORY_SEPARATOR, $absolutes);
+        return ($hasLeadingSlash ? \DIRECTORY_SEPARATOR : '') . implode(\DIRECTORY_SEPARATOR, $absolutes);
     }
 
     /**
