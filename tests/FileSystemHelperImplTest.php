@@ -278,4 +278,27 @@ class FileSystemHelperImplTest extends BaseCase
             ],
         ];
     }
+
+    public function testCopyDir(): void
+    {
+        $id = [self::class, 'testCopyDir'];
+        self::clearDir($id);
+
+        $from = self::getPathToTestDir($id, 'source');
+        $nestedFile = self::getPathToTestFile($id, 'source');
+        $nestedFileSecondLevel = self::getPathToTestFile($id, 'source', 'nested');
+
+        $to = self::getPathToTestDir($id) . '/destination';
+        $destinationNestedFile = $to . '/' . pathinfo($nestedFile, \PATHINFO_BASENAME);
+        $destinationNestedFileSecondLevel = $to . '/nested/' . pathinfo($nestedFileSecondLevel, \PATHINFO_BASENAME);
+
+        $helper = new FileSystemHelperImpl();
+        $helper->copy($from, $to);
+
+        $this->assertDirectoryExists($to);
+        $this->assertFileExists($destinationNestedFile);
+        $this->assertFileEquals($nestedFile, $destinationNestedFile);
+        $this->assertFileExists($destinationNestedFileSecondLevel);
+        $this->assertFileEquals($nestedFileSecondLevel, $destinationNestedFileSecondLevel);
+    }
 }
