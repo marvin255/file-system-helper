@@ -301,4 +301,28 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertFileExists($destinationNestedFileSecondLevel);
         $this->assertFileEquals($nestedFileSecondLevel, $destinationNestedFileSecondLevel);
     }
+
+    public function testRenameDir(): void
+    {
+        $id = [self::class, 'testRenameDir'];
+        self::clearDir($id);
+
+        $from = self::getPathToTestDir($id, 'source');
+        $nestedFile = self::getPathToTestFile($id, 'source');
+        $nestedFileSecondLevel = self::getPathToTestFile($id, 'source', 'nested');
+
+        $to = self::getPathToTestDir($id) . '/destination';
+        $destinationNestedFile = $to . '/' . pathinfo($nestedFile, \PATHINFO_BASENAME);
+        $destinationNestedFileSecondLevel = $to . '/nested/' . pathinfo($nestedFileSecondLevel, \PATHINFO_BASENAME);
+
+        $helper = new FileSystemHelperImpl();
+        $helper->rename($from, $to);
+
+        $this->assertDirectoryExists($to);
+        $this->assertDirectoryDoesNotExist($from);
+        $this->assertFileExists($destinationNestedFile);
+        $this->assertFileDoesnotExist($nestedFile);
+        $this->assertFileExists($destinationNestedFileSecondLevel);
+        $this->assertFileDoesnotExist($nestedFileSecondLevel);
+    }
 }
