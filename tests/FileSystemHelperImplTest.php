@@ -42,6 +42,7 @@ class FileSystemHelperImplTest extends BaseCase
     public static function provideRemove(): array
     {
         $id = [self::class, 'provideRemove'];
+        self::clearDir($id);
 
         $dirWithContent = self::getPathToTestDir($id, 'dir_content');
         self::getPathToTestFile($id, 'dir_content', 'nested');
@@ -121,6 +122,7 @@ class FileSystemHelperImplTest extends BaseCase
     public static function provideRemoveIfExists(): array
     {
         $id = [self::class, 'provideRemoveIfExists'];
+        self::clearDir($id);
 
         $dirWithContent = self::getPathToTestDir($id, 'dir_content');
         self::getPathToTestFile($id, 'dir_content', 'nested');
@@ -173,6 +175,106 @@ class FileSystemHelperImplTest extends BaseCase
                 '',
                 null,
                 FileSystemException::create("Can't create SplFileInfo"),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider provideCopyFile
+     */
+    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, \Exception $exception = null, string $baseDir = null): void
+    {
+        $helper = new FileSystemHelperImpl($baseDir);
+
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
+
+        $helper->copy($from, $to);
+
+        if (!$exception) {
+            $from = self::convertPathToString($from);
+            $to = self::convertPathToString($to);
+            $this->assertFileExists($to);
+            $this->assertFileEquals($from, $to);
+        }
+    }
+
+    public static function provideCopyFile(): array
+    {
+        $id = [self::class, 'provideCopyFile'];
+        self::clearDir($id);
+
+        return [
+            'copy file' => [
+                self::getPathToTestFile($id, 'dir_1'),
+                self::getPathToTestDir($id, 'dir_1') . '/dest.txt',
+            ],
+            'copy file object' => [
+                self::convertPathToSpl(
+                    self::getPathToTestFile($id, 'dir_2')
+                ),
+                self::convertPathToSpl(
+                    self::getPathToTestDir($id, 'dir_2') . '/dest.txt'
+                ),
+            ],
+            'copy unexisted file' => [
+                '/non_existed_file',
+                '/destination',
+                FileSystemException::create("Can't find source"),
+            ],
+            'copy to existed file' => [
+                self::getPathToTestFile($id, 'dir_3'),
+                self::getPathToTestFile($id, 'dir_3'),
+                FileSystemException::create('already exists'),
+            ],
+            'copy to existed dir' => [
+                self::getPathToTestFile($id, 'dir_4'),
+                self::getPathToTestDir($id, 'dir_4'),
+                FileSystemException::create('already exists'),
+            ],
+            'copy entites with utf in names' => [
+                self::getPathToTestFile($id, 'dir_5', 'тест'),
+                self::getPathToTestDir($id, 'dir_5', 'тест') . '/тест_новый.txt',
+            ],
+            'copy file with backslashes in name' => [
+                self::convertPathToString(
+                    self::getPathToTestFile($id, 'dir_6'),
+                    '\\'
+                ),
+                self::convertPathToString(
+                    self::getPathToTestDir($id, 'dir_6') . '/dest.txt',
+                    '\\'
+                ),
+            ],
+            'copy to the path where parent is not a folder' => [
+                self::getPathToTestFile($id, 'dir_7'),
+                self::getPathToTestFile($id, 'dir_7') . '/file.txt',
+                FileSystemException::create("is not a direcotry or doesn't exist"),
+            ],
+            'copy from outside base folder' => [
+                self::getPathToTestFile($id, 'dir_8'),
+                self::getPathToTestDir($id, 'dir_8', 'base') . '/dest.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestFile($id, 'dir_8', 'base'),
+            ],
+            'copy to outside base folder' => [
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+                self::getPathToTestDir($id, 'dir_9') . '/dest.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestFile($id, 'dir_9', 'base'),
+            ],
+            'copy from outside base folder by relative path' => [
+                self::getPathToTestDir($id, 'dir_10') . '/../outside_base_dir/outside_base_dir.txt',
+                self::getPathToTestDir($id, 'dir_10') . '/outside_base_dir_destination.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'dir_10'),
+            ],
+            'copy to outside base folder by relative path' => [
+                self::getPathToTestFile($id, 'dir_11'),
+                self::getPathToTestDir($id, 'dir_11') . '/../outside_base_dir/outside_base_dir.txt',
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'dir_11'),
             ],
         ];
     }

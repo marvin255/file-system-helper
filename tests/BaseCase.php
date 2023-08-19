@@ -44,30 +44,7 @@ abstract class BaseCase extends TestCase
      */
     protected static function getPathToTestDir(...$parts): string
     {
-        $flattenParts = [];
-        foreach ($parts as $part) {
-            if (\is_array($part)) {
-                $flattenParts = array_merge($flattenParts, $part);
-            } else {
-                $flattenParts[] = $part;
-            }
-        }
-
-        $preparedParts = [self::getTempDir()];
-        foreach ($flattenParts as $part) {
-            $preparedPart = trim($part);
-            $preparedPart = mb_strtolower($part);
-            $preparedPart = str_replace([' ', '\\', '/', '.', ','], '_', $preparedPart);
-            if ($preparedPart !== '') {
-                $preparedParts[] = $preparedPart;
-            }
-        }
-
-        if (\count($preparedParts) < 2) {
-            throw new \RuntimeException('Parts for path must be provided');
-        }
-
-        $path = implode(\DIRECTORY_SEPARATOR, $preparedParts);
+        $path = self::convertPartsToPath(...$parts);
 
         if (!is_dir($path) && !mkdir($path, 0777, true)) {
             throw new \RuntimeException("Can't create {$path} folder");
@@ -96,9 +73,13 @@ abstract class BaseCase extends TestCase
 
     /**
      * Removes set dir with all content.
+     *
+     * @psalm-param string[]|string[][] $parts
      */
-    protected static function removeDir(string $folderPath): void
+    protected static function clearDir(...$parts): void
     {
+        $folderPath = self::convertPartsToPath(...$parts);
+
         if (is_dir($folderPath)) {
             $it = new \RecursiveDirectoryIterator(
                 $folderPath,
@@ -140,6 +121,37 @@ abstract class BaseCase extends TestCase
         }
 
         return new \SplFileInfo($path);
+    }
+
+    /**
+     * @psalm-param string[]|string[][] $parts
+     */
+    private static function convertPartsToPath(...$parts): string
+    {
+        $flattenParts = [];
+        foreach ($parts as $part) {
+            if (\is_array($part)) {
+                $flattenParts = array_merge($flattenParts, $part);
+            } else {
+                $flattenParts[] = $part;
+            }
+        }
+
+        $preparedParts = [self::getTempDir()];
+        foreach ($flattenParts as $part) {
+            $preparedPart = trim($part);
+            $preparedPart = mb_strtolower($part);
+            $preparedPart = str_replace([' ', '\\', '/', '.', ','], '_', $preparedPart);
+            if ($preparedPart !== '') {
+                $preparedParts[] = $preparedPart;
+            }
+        }
+
+        if (\count($preparedParts) < 2) {
+            throw new \RuntimeException('Parts for path must be provided');
+        }
+
+        return implode(\DIRECTORY_SEPARATOR, $preparedParts);
     }
 
     /**
