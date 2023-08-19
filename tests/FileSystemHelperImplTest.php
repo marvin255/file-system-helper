@@ -491,4 +491,69 @@ class FileSystemHelperImplTest extends BaseCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider provideMkdirIfNotExist
+     */
+    public function testMkdirIfNotExist(\SplFileInfo|string $name, int $permissions = null, \Exception $exception = null, string $baseDir = null): void
+    {
+        $helper = new FileSystemHelperImpl($baseDir);
+
+        if ($exception) {
+            $this->expectExceptionObject($exception);
+        }
+
+        if ($permissions === null) {
+            $helper->mkdirIfNotExist($name);
+        } else {
+            $helper->mkdirIfNotExist($name, $permissions);
+        }
+
+        if (!$exception) {
+            $this->assertDirectoryExists($this->convertPathToString($name));
+            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
+        }
+    }
+
+    public static function provideMkdirIfNotExist(): array
+    {
+        $id = [self::class, 'provideMkdirIfNotExist'];
+        self::clearDir($id);
+
+        return [
+            'make dir' => [
+                self::getPathToTestDir($id) . '/dir_1',
+                0775,
+            ],
+            'make dir with default permissions' => [
+                self::getPathToTestDir($id) . '/dir_2',
+            ],
+            'make nested dir' => [
+                self::getPathToTestDir($id) . '/one_1/two_1/three_1',
+                0775,
+            ],
+            'make nested dir with default permissions' => [
+                self::getPathToTestDir($id) . '/one_2/two_2/three_2',
+            ],
+            'dir already exists' => [
+                self::getPathToTestDir($id, 'existed'),
+                0755,
+            ],
+            'make dir outside base dir' => [
+                self::getPathToTestDir($id) . '/outside',
+                null,
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id, 'base'),
+            ],
+            'make dir outside base dir by relative path' => [
+                self::getPathToTestDir($id) . '/../../outside',
+                null,
+                FileSystemException::create('All paths must be within base directory'),
+                self::getPathToTestDir($id),
+            ],
+            'make dir with utf symbols' => [
+                self::getPathToTestDir($id) . '/тест',
+            ],
+        ];
+    }
 }
