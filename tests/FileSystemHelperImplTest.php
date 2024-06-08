@@ -24,7 +24,7 @@ class FileSystemHelperImplTest extends BaseCase
     /**
      * @dataProvider provideRemove
      */
-    public function testRemove(string|\SplFileInfo $file, string $baseDir = null, \Exception $exception = null): void
+    public function testRemove(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -104,7 +104,7 @@ class FileSystemHelperImplTest extends BaseCase
     /**
      * @dataProvider provideRemoveIfExists
      */
-    public function testRemoveIfExists(string|\SplFileInfo $file, string $baseDir = null, \Exception $exception = null): void
+    public function testRemoveIfExists(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -182,7 +182,7 @@ class FileSystemHelperImplTest extends BaseCase
     /**
      * @dataProvider provideCopyFile
      */
-    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, \Exception $exception = null, string $baseDir = null): void
+    public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -305,7 +305,7 @@ class FileSystemHelperImplTest extends BaseCase
     /**
      * @dataProvider provideRenameFile
      */
-    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, \Exception $exception = null, string $baseDir = null): void
+    public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -429,7 +429,7 @@ class FileSystemHelperImplTest extends BaseCase
     /**
      * @dataProvider provideMkdir
      */
-    public function testMkdir(\SplFileInfo|string $name, int $permissions = null, \Exception $exception = null, string $baseDir = null): void
+    public function testMkdir(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -445,7 +445,7 @@ class FileSystemHelperImplTest extends BaseCase
 
         if (!$exception) {
             $this->assertDirectoryExists($this->convertPathToString($name));
-            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
+            $this->assertDirectoryHasPermissions($permissions ?? 0777, $name);
         }
     }
 
@@ -495,7 +495,7 @@ class FileSystemHelperImplTest extends BaseCase
     /**
      * @dataProvider provideMkdirIfNotExist
      */
-    public function testMkdirIfNotExist(\SplFileInfo|string $name, int $permissions = null, \Exception $exception = null, string $baseDir = null): void
+    public function testMkdirIfNotExist(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
 
@@ -511,7 +511,7 @@ class FileSystemHelperImplTest extends BaseCase
 
         if (!$exception) {
             $this->assertDirectoryExists($this->convertPathToString($name));
-            $this->assertDirectoryHasPermissions($permissions ?: 0777, $name);
+            $this->assertDirectoryHasPermissions($permissions ?? 0777, $name);
         }
     }
 

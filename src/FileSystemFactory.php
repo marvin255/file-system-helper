@@ -18,7 +18,7 @@ final class FileSystemFactory
     /**
      * Creates new FileSystemHelperInterface instance with default settings.
      */
-    public static function create(string $baseFolder = null): FileSystemHelper
+    public static function create(?string $baseFolder = null): FileSystemHelper
     {
         return new FileSystemHelperImpl($baseFolder);
     }
