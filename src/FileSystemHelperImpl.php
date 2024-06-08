@@ -16,7 +16,7 @@ final class FileSystemHelperImpl implements FileSystemHelper
 {
     private readonly ?string $baseFolder;
 
-    public function __construct(string $baseFolder = null)
+    public function __construct(?string $baseFolder = null)
     {
         $validatedBaseFolder = null;
 
