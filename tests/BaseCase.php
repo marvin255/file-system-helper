@@ -160,8 +160,8 @@ abstract class BaseCase extends TestCase
     protected function assertDirectoryHasPermissions(int $awaitedPermissions, \SplFileInfo|string $directory): void
     {
         $directory = self::convertPathToString($directory);
-        $awaitedPermissions = sprintf('%o', $awaitedPermissions);
-        $realPermissions = substr(sprintf('%o', fileperms($directory)), -3);
+        $awaitedPermissions = \sprintf('%o', $awaitedPermissions);
+        $realPermissions = substr(\sprintf('%o', fileperms($directory)), -3);
         $this->assertSame($awaitedPermissions, $realPermissions, 'Directory has correct permissions');
     }
 }

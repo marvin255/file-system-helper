@@ -1,12 +1,13 @@
 <?php
 
 use PhpCsFixer\Config;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 $finder = PhpCsFixer\Finder::create()->in(__DIR__);
 
 $rules = [
     '@Symfony' => true,
-    'new_with_braces' => true,
+    'new_with_parentheses' => true,
     'concat_space' => [
         'spacing' => 'one',
     ],
@@ -45,4 +46,7 @@ $rules = [
     'strict_comparison' => true,
 ];
 
-return (new Config())->setRules($rules)->setFinder($finder);
+return (new Config())
+    ->setParallelConfig(ParallelConfigFactory::detect())
+    ->setRules($rules)
+    ->setFinder($finder);
