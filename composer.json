@@ -25,7 +25,7 @@
   },
   "scripts": {
     "test": [
-      "vendor/bin/phpunit --configuration phpunit.xml.dist"
+      "vendor/bin/phpunit --configuration phpunit.xml.dist --display-deprecations --display-phpunit-deprecations"
     ],
     "coverage": [
       "vendor/bin/phpunit --configuration phpunit.xml.dist --coverage-html=tests/coverage"
