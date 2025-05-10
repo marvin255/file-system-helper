@@ -12,9 +12,7 @@ use Marvin255\FileSystemHelper\Tests\BaseCase;
  */
 final class PathHelperTest extends BaseCase
 {
-    /**
-     * @dataProvider provideIsPathParentForPath
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideIsPathParentForPath')]
     public function testIsPathParentForPath(string $parentPath, string $path, bool $awaits): void
     {
         $testResult = PathHelper::isPathParentForPath($parentPath, $path);
@@ -71,9 +69,7 @@ final class PathHelperTest extends BaseCase
         $this->assertNull($testResult);
     }
 
-    /**
-     * @dataProvider provideUnifyPath
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideUnifyPath')]
     public function testUnifyPath(string $path, string $awaits): void
     {
         $testResult = PathHelper::unifyPath($path);
