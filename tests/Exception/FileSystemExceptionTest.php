@@ -10,7 +10,7 @@ use Marvin255\FileSystemHelper\Tests\BaseCase;
 /**
  * @internal
  */
-class FileSystemExceptionTest extends BaseCase
+final class FileSystemExceptionTest extends BaseCase
 {
     public function testCreate(): void
     {

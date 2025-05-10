@@ -10,7 +10,7 @@ use Marvin255\FileSystemHelper\FileSystemHelper;
 /**
  * @internal
  */
-class FileSystemFactoryTest extends BaseCase
+final class FileSystemFactoryTest extends BaseCase
 {
     /**
      * @throws \Throwable

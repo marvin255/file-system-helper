@@ -10,7 +10,7 @@ use Marvin255\FileSystemHelper\FileSystemHelperImpl;
 /**
  * @internal
  */
-class FileSystemHelperImplTest extends BaseCase
+final class FileSystemHelperImplTest extends BaseCase
 {
     public function testEmptyBasePathUnexistedInConstructException(): void
     {
@@ -21,9 +21,7 @@ class FileSystemHelperImplTest extends BaseCase
         new FileSystemHelperImpl($path);
     }
 
-    /**
-     * @dataProvider provideRemove
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideRemove')]
     public function testRemove(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
@@ -101,9 +99,7 @@ class FileSystemHelperImplTest extends BaseCase
         ];
     }
 
-    /**
-     * @dataProvider provideRemoveIfExists
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideRemoveIfExists')]
     public function testRemoveIfExists(string|\SplFileInfo $file, ?string $baseDir = null, ?\Exception $exception = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
@@ -179,9 +175,7 @@ class FileSystemHelperImplTest extends BaseCase
         ];
     }
 
-    /**
-     * @dataProvider provideCopyFile
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideCopyFile')]
     public function testCopyFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
@@ -302,9 +296,7 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertFileEquals($nestedFileSecondLevel, $destinationNestedFileSecondLevel);
     }
 
-    /**
-     * @dataProvider provideRenameFile
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideRenameFile')]
     public function testRenameFile(string|\SplFileInfo $from, string|\SplFileInfo $to, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
@@ -426,9 +418,7 @@ class FileSystemHelperImplTest extends BaseCase
         $this->assertFileDoesnotExist($nestedFileSecondLevel);
     }
 
-    /**
-     * @dataProvider provideMkdir
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideMkdir')]
     public function testMkdir(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
@@ -492,9 +482,7 @@ class FileSystemHelperImplTest extends BaseCase
         ];
     }
 
-    /**
-     * @dataProvider provideMkdirIfNotExist
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideMkdirIfNotExist')]
     public function testMkdirIfNotExist(\SplFileInfo|string $name, ?int $permissions = null, ?\Exception $exception = null, ?string $baseDir = null): void
     {
         $helper = new FileSystemHelperImpl($baseDir);
