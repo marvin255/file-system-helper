@@ -161,7 +161,7 @@ abstract class BaseCase extends TestCase
     {
         $directory = self::convertPathToString($directory);
         $awaitedPermissions = \sprintf('%o', $awaitedPermissions);
-        $realPermissions = substr(\sprintf('%o', fileperms($directory)), -3);
+        $realPermissions = substr(\sprintf('%o', (string) fileperms($directory)), -3);
         $this->assertSame($awaitedPermissions, $realPermissions, 'Directory has correct permissions');
     }
 }
