@@ -10,7 +10,7 @@ use Marvin255\FileSystemHelper\FileSystemHelperImpl;
 /**
  * @internal
  */
-class FileSystemHelperImplTest extends BaseCase
+final class FileSystemHelperImplTest extends BaseCase
 {
     public function testEmptyBasePathUnexistedInConstructException(): void
     {

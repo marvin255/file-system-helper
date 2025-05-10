@@ -10,7 +10,7 @@ use Marvin255\FileSystemHelper\Tests\BaseCase;
 /**
  * @internal
  */
-class PathHelperTest extends BaseCase
+final class PathHelperTest extends BaseCase
 {
     /**
      * @dataProvider provideIsPathParentForPath
