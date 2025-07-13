@@ -11,7 +11,7 @@
     "phpunit/phpunit": "^12.0",
     "friendsofphp/php-cs-fixer": "^3.0",
     "vimeo/psalm": "^6.0",
-    "infection/infection": "^0.29"
+    "infection/infection": "^0.29 || ^0.30"
   },
   "autoload": {
     "psr-4": {
