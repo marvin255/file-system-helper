@@ -47,10 +47,6 @@ final class PathHelper
     {
         $path = self::fixDirectorySeparatorAndTrim($path);
 
-        if ($path === '') {
-            return '';
-        }
-
         $hasLeadingSlash = substr($path, 0, 1) === \DIRECTORY_SEPARATOR;
         $parts = array_filter(
             explode(\DIRECTORY_SEPARATOR, $path),
