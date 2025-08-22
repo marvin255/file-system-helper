@@ -15,7 +15,6 @@
     </projectFiles>
 
     <issueHandlers>
-        <PropertyNotSetInConstructor errorLevel="suppress"/>
     </issueHandlers>
 
     <plugins>
